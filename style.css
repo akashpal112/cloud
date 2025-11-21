@@ -274,7 +274,7 @@ p {
 
 /* CTA Section */
 .cta-section {
-    background: linear-gradient(135deg, #1a192f, #4c3e3e); /* Dark gradient */
+    background: linear-gradient(135deg, #f0f0f0, #4c3e3e); /* Dark gradient */
     padding: 80px 0;
     text-align: center;
     border-top: 1px solid rgba(255,255,255,0.1);
@@ -282,7 +282,7 @@ p {
 
 .cta-section h2 {
     font-size: 3rem;
-    color: #fff;
+    color: #9e4040;
     margin-bottom: 20px;
 }
 
@@ -294,7 +294,7 @@ p {
 
 /* Footer */
 .footer {
-    background-color: #050411; /* Even darker footer */
+    background-color: #e0deed; /* Even darker footer */
     color: #c0c0c0;
     padding: 60px 0 30px;
     font-size: 0.9rem;
@@ -308,8 +308,8 @@ p {
 }
 
 .footer ul {
-    list-style: none;
-    padding: 0;
+    list-style: georgian;
+    padding: 20;
 }
 
 .footer ul li {
