@@ -5,4 +5,4 @@ pymongo
 python-dotenv
 cloudinary
 gunicorn
-vobject  <--- यह सबसे महत्वपूर्ण है!
+vobject
