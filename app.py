@@ -13,6 +13,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import cloudinary
 import cloudinary.uploader
+import vobject # <--- NEW: VCF parsing library
 
 # Load environment variables from .env file
 load_dotenv()
@@ -207,6 +208,94 @@ def add_contact():
     except Exception as e:
         print(f"❌ Error adding contact: {e}")
         return jsonify({"success": False, "message": "Failed to save contact."}), 500
+        
+# --- NEW: VCF Contact Import Route ---
+@app.route('/api/import_vcf', methods=['POST'])
+@login_required
+def import_vcf():
+    current_user_id = session.get('user_id')
+    
+    if 'vcf_file' not in request.files:
+        return jsonify({"success": False, "message": "No file part in the request."}), 400
+
+    vcf_file = request.files['vcf_file']
+    
+    if vcf_file.filename == '':
+        return jsonify({"success": False, "message": "No selected file."}), 400
+        
+    if not vcf_file.filename.endswith('.vcf'):
+        return jsonify({"success": False, "message": "Invalid file type. Please upload a .vcf file."}), 400
+    
+    # Read the file content
+    try:
+        # Read the file content and decode it to a string for vobject parsing
+        vcf_content = vcf_file.read().decode('utf-8') 
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Could not read file content: {e}"}), 400
+
+    contacts_imported = 0
+
+    try:
+        # Parse VCF content (handles multiple contacts in one file)
+        for vcard in vobject.readComponents(vcf_content): 
+            name = ""
+            phone = ""
+            email = ""
+
+            # 1. Get Name (FN is Full Name, N is Structured Name)
+            if hasattr(vcard, 'fn'):
+                name = str(vcard.fn.value)
+            elif hasattr(vcard, 'n'):
+                n_parts = vcard.n.value
+                name = f"{n_parts.given} {n_parts.family}" if n_parts.given or n_parts.family else "Unknown Name"
+            
+            if not name:
+                name = "Unknown Contact (VCF Import)"
+
+
+            # 2. Get Phone Number (Prioritize 'CELL' or first available 'TEL')
+            if hasattr(vcard, 'tel_list'):
+                for tel in vcard.tel_list:
+                    phone = tel.value
+                    # Check for common mobile/voice types
+                    if 'CELL' in tel.params.get('TYPE', []) or 'VOICE' in tel.params.get('TYPE', []):
+                        break 
+            
+            # 3. Get Email (First available 'EMAIL')
+            if hasattr(vcard, 'email_list') and vcard.email_list:
+                email = vcard.email_list[0].value
+                
+            
+            # Save the contact only if a phone number is found
+            if phone:
+                contacts_collection.insert_one({
+                    "user_id": current_user_id,
+                    "name": name,
+                    "phone": phone,
+                    "email": email,
+                    "source": "vcf_import",
+                    "created_at": datetime.utcnow()
+                })
+                contacts_imported += 1
+            
+        if contacts_imported > 0:
+            return jsonify({
+                "success": True, 
+                "message": f"Successfully imported {contacts_imported} contact(s)."
+            }), 200
+        else:
+            return jsonify({
+                "success": False, 
+                "message": "No valid contacts found in the VCF file (0 phone numbers extracted)."
+            }), 400
+
+    except Exception as e:
+        print(f"❌ Error during VCF parsing: {e}")
+        return jsonify({
+            "success": False, 
+            "message": f"VCF parsing failed. Please check file format. Error: {e}"
+        }), 500
+
 
 @app.route('/api/contacts', methods=['GET'])
 @login_required

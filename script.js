@@ -289,7 +289,7 @@ function navigateLightbox(direction) {
 
 
 // ----------------------------------------------------------------------
-// --- 5. PRIVATE CONTACTS HANDLERS (NEW SECTION) ---
+// --- 5. PRIVATE CONTACTS HANDLERS (UPDATED SECTION) ---
 // ----------------------------------------------------------------------
 
 async function fetchContacts() {
@@ -420,6 +420,53 @@ async function deleteContact(contactId) {
 }
 
 
+/* ----------------------------------------------------------------------
+   script.js - VCF Upload Handler (NEW)
+----------------------------------------------------------------------*/
+
+async function handleVcfUpload(event) {
+    event.preventDefault();
+    const vcfFileInput = document.getElementById('vcfFileInput');
+    const vcfUploadMessage = document.getElementById('vcfUploadMessage');
+    const file = vcfFileInput.files[0];
+
+    if (!file) {
+        vcfUploadMessage.textContent = "Please select a VCF file.";
+        vcfUploadMessage.style.color = '#FF6B6B';
+        return;
+    }
+
+    vcfUploadMessage.textContent = "Processing VCF file...";
+    vcfUploadMessage.style.color = 'yellow';
+
+    const formData = new FormData();
+    formData.append('vcf_file', file);
+
+    try {
+        const response = await fetch(`${SERVER_URL}/api/import_vcf`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        const data = await response.json();
+        
+        vcfUploadMessage.style.color = data.success ? '#03DAC6' : '#FF6B6B';
+        vcfUploadMessage.textContent = data.message;
+        
+        if (data.success) {
+            // Refresh contacts list after successful upload
+            fetchContacts();
+            vcfFileInput.value = ''; // Clear file input
+        }
+
+    } catch (error) {
+        console.error('Error importing VCF:', error);
+        vcfUploadMessage.textContent = 'An error occurred during VCF upload.';
+        vcfUploadMessage.style.color = '#FF6B6B';
+    }
+}
+
+
 // --- 6. INITIALIZATION ---
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -463,6 +510,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Attach Contact Form Listener
             const addContactForm = document.getElementById('addContactForm');
             if(addContactForm) addContactForm.addEventListener('submit', handleAddContact);
+            
+            // Attach VCF Upload Listener (NEW)
+            const vcfUploadForm = document.getElementById('vcfUploadForm');
+            if(vcfUploadForm) vcfUploadForm.addEventListener('submit', handleVcfUpload);
             
         } else {
             if (loginPrompt) loginPrompt.style.display = "block";

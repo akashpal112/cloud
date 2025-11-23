@@ -1,425 +1,273 @@
 /* General Body and Container for Gallery Page */
 body.gallery-page {
-    background: #11111f; /* Very dark background for contrast */
-    color: #e0e0e0; /* Light grey text for readability */
-    font-family: 'Montserrat', sans-serif; /* Elegant sans-serif font */
+    background: #486f89; 
+    color: #8a5252; 
+    font-family: 'Montserrat', sans-serif; 
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden; /* Prevent horizontal scroll on animations */
+    overflow-x: hidden;
 }
 
 /* Elegant Navbar */
 .gallery-page .elegant-navbar {
-    background-color: rgba(10, 10, 20, 0.8); /* Slightly transparent dark background */
-    backdrop-filter: blur(8px); /* Frosted glass effect */
-    border-bottom: 1px solid rgba(139, 92, 246, 0.3); /* Subtle purple-ish border */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    background-color: rgba(20, 1, 24, 0.8); 
+    backdrop-filter: blur(8px); 
+    border-bottom: 1px solid rgba(139, 92, 246, 0.3); 
+    box-shadow: 0 4px 15px rgba(130, 90, 90, 0.3);
     padding: 1rem 0;
 }
 
 .gallery-page .elite-logo {
-    font-family: 'Playfair Display', serif; /* Serif font for logo */
+    font-family: 'Playfair Display', serif; 
     font-size: 1.8rem;
     font-weight: 700;
     background: linear-gradient(45deg, #FFD700, #DAA520); /* Gold gradient */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-    transition: all 0.3s ease;
+    color: #DAA520; /* Fallback */
 }
 
-.gallery-page .elite-logo:hover {
-    transform: scale(1.03);
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
-}
-
-.gallery-page .elite-logo .fa-gem {
-    color: #ffd700; /* Gold gem icon */
-}
-
-.gallery-page .welcome-text {
-    font-size: 1.1rem;
-    color: #b0b0b0;
-}
-
-.gallery-page .welcome-text strong {
-    color: #f0f0f0;
-    font-weight: 600;
-}
-
-.gallery-page .btn-logout {
-    background-image: linear-gradient(45deg, #e74c3c, #c0392b); /* Rich red gradient */
-    border: none;
-    font-weight: 600;
-    padding: 0.6rem 1.5rem;
-    border-radius: 5px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
-}
-
-.gallery-page .btn-logout:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 6px 15px rgba(231, 76, 60, 0.6);
-}
-
-/* Main Content Area */
+/* Main Content Padding */
 .main-content-area {
-    padding-top: 100px; /* Adjust for fixed navbar */
-    flex-grow: 1;
+    padding-top: 100px;
+    padding-bottom: 40px;
 }
 
 /* Frosted Glass Card Effect */
 .frosted-glass-card {
-    background: rgba(255, 255, 255, 0.08); /* Light transparent background */
-    backdrop-filter: blur(10px); /* Heavy blur for frosted effect */
-    border: 1px solid rgba(255, 255, 255, 0.15); /* Subtle border */
-    border-radius: 12px;
-    padding: 2.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    color: #E0E0E0;
 }
 
-.frosted-glass-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
-}
-
-/* Section Titles */
-.section-title-elegant {
-    font-family: 'Playfair Display', serif;
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 3rem;
-    line-height: 1.2;
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+.text-gold {
+    color: #FFD700 !important;
 }
 
 .text-gold-gradient {
     background: linear-gradient(45deg, #FFD700, #DAA520);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    color: #DAA520; /* Fallback */
 }
 
-.text-gold {
-    color: #FFD700;
-}
-
-.text-secondary-light {
-    color: #b0b0b0;
-}
-
-/* Upload Area Styling */
-.upload-area {
-    background: rgba(255, 255, 255, 0.05); /* Even lighter transparent background */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 3rem 2rem;
-    border-radius: 10px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-    margin-bottom: 4rem;
+.section-title-elegant {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 2.5rem;
+    color: #E0E0E0;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
 }
 
 .btn-upload-elegant {
-    background-image: linear-gradient(45deg, #3498db, #2980b9); /* Blue gradient for upload */
+    background: linear-gradient(90deg, #03DAC6, #BB86FC);
     border: none;
     font-weight: 600;
-    padding: 0.8rem 2.5rem;
-    font-size: 1.2rem;
-    border-radius: 8px;
     transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
 }
 
 .btn-upload-elegant:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.6);
+    background: linear-gradient(90deg, #BB86FC, #03DAC6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(187, 134, 252, 0.5);
 }
 
-.custom-file-upload {
-    cursor: pointer;
+/* Dark Form Controls */
+.form-control-dark {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #E0E0E0;
+    transition: border-color 0.3s, background-color 0.3s;
 }
 
-/* Gallery Grid Styling (Responsive) */
+.form-control-dark:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: #03DAC6;
+    color: #E0E0E0;
+    box-shadow: 0 0 0 0.25rem rgba(3, 218, 198, 0.25);
+}
+
+/* Gallery Grid Styling */
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive columns */
-    gap: 30px; /* Space between items */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
     padding: 20px 0;
 }
 
-.gallery-item {
+.gallery-card {
     position: relative;
-    background: rgba(255, 255, 255, 0.05); /* Frosted background for items */
-    border-radius: 10px;
     overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     cursor: pointer;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    aspect-ratio: 16 / 12; /* Maintain aspect ratio for items */
 }
 
-.gallery-item:hover {
-    transform: translateY(-8px) scale(1.03);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+.gallery-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 215, 0, 0.4);
 }
 
-.gallery-item img {
+.gallery-card img {
     width: 100%;
-    height: 100%;
-    object-fit: cover; /* Cover the area, crop if needed */
+    height: 300px;
+    object-fit: cover;
     display: block;
-    transition: transform 0.4s ease;
+    transition: opacity 0.3s;
 }
 
-.gallery-item:hover img {
-    transform: scale(1.1); /* Zoom effect on hover */
-}
-
-.gallery-overlay {
+/* Card Overlay for Actions */
+.card-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7); /* Darker overlay */
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     opacity: 0;
     transition: opacity 0.3s ease;
-    padding: 15px;
-    text-align: center;
 }
 
-.gallery-item:hover .gallery-overlay {
+.gallery-card:hover .card-overlay {
     opacity: 1;
 }
 
-.photo-info {
-    color: #f0f0f0;
-    font-size: 1.1rem;
-    font-weight: 500;
-    margin-bottom: 10px;
-    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background for text */
-    padding: 8px 12px;
-    border-radius: 5px;
-}
-
-.photo-info .fa-camera, .photo-info .fa-calendar-alt {
-    color: #FFD700; /* Gold icon */
-    margin-right: 8px;
-}
-
-.photo-date {
-    font-size: 0.9rem;
-    color: #b0b0b0;
-    margin-top: 5px;
-}
-
-.delete-btn {
-    background-color: #e74c3c;
+.delete-btn, .view-btn {
     color: white;
+    background-color: rgba(255, 0, 0, 0.8);
     padding: 8px 15px;
+    margin: 5px;
     border-radius: 5px;
-    cursor: pointer;
     font-weight: 600;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    margin-top: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
-
-.delete-btn:hover {
-    background-color: #c0392b;
-    transform: translateY(-2px);
+.view-btn {
+    background-color: rgba(3, 218, 198, 0.8);
 }
+.delete-btn:hover { background-color: rgba(255, 0, 0, 1); }
+.view-btn:hover { background-color: rgba(3, 218, 198, 1); }
 
-/* Lightbox Styling */
+
+/* Lightbox Modal */
 .lightbox {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.95); /* Very dark, almost black background */
-    display: flex;
-    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.95);
+    display: none;
     align-items: center;
+    justify-content: center;
     z-index: 1050;
     opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity 0.3s;
 }
 
 .lightbox.active {
+    display: flex;
     opacity: 1;
-    visibility: visible;
+}
+
+.close-lightbox {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
 }
 
 .lightbox-content {
     max-width: 90%;
     max-height: 90%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    text-align: center;
 }
 
 .lightbox-content img {
     max-width: 100%;
-    max-height: 100%;
-    object-fit: contain; /* Ensure entire image is visible */
-    border: 3px solid #FFD700; /* Gold border for premium look */
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
-    border-radius: 5px;
-}
-
-.close-lightbox {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    font-size: 3rem;
-    color: #FFD700; /* Gold close button */
-    cursor: pointer;
-    transition: color 0.3s ease, transform 0.3s ease;
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
-.close-lightbox:hover {
-    color: #fdd835; /* Lighter gold on hover */
-    transform: rotate(90deg);
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    transition: opacity 0.3s;
 }
 
 .lightbox-nav {
     position: absolute;
     width: 100%;
-    height: 100%;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
 }
 
 .lightbox-nav-btn {
-    background: rgba(255, 215, 0, 0.2); /* Semi-transparent gold */
-    color: #FFD700;
-    padding: 15px 20px;
-    font-size: 2.5rem;
+    color: #fff;
+    font-size: 3rem;
+    padding: 20px;
     cursor: pointer;
-    border-radius: 50%;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-    backdrop-filter: blur(5px);
+    opacity: 0.7;
+    transition: opacity 0.3s;
 }
 
 .lightbox-nav-btn:hover {
-    background: rgba(255, 215, 0, 0.4);
-    transform: scale(1.1);
-}
-
-/* Responsive Adjustments */
-@media (max-width: 992px) {
-    .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* Smaller items on medium screens */
-        gap: 20px;
-    }
-    .section-title-elegant {
-        font-size: 2.5rem;
-    }
-    .btn-upload-elegant {
-        padding: 0.7rem 2rem;
-        font-size: 1rem;
-    }
-    .frosted-glass-card {
-        padding: 2rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Even smaller items on tablets */
-        gap: 15px;
-    }
-    .elite-logo {
-        font-size: 1.5rem;
-    }
-    .welcome-text {
-        display: none !important; /* Hide welcome text on small screens */
-    }
-    .section-title-elegant {
-        font-size: 2rem;
-        margin-bottom: 2rem;
-    }
-    .frosted-glass-card {
-        padding: 1.5rem;
-    }
-    .close-lightbox {
-        top: 15px;
-        right: 20px;
-        font-size: 2.5rem;
-    }
-    .lightbox-nav-btn {
-        font-size: 2rem;
-        padding: 10px 15px;
-    }
-}
-
-@media (max-width: 576px) {
-    .gallery-grid {
-        grid-template-columns: 1fr; /* Single column on extra small screens */
-        padding: 10px;
-    }
-    .main-content-area {
-        padding-top: 80px;
-        padding-left: 15px;
-        padding-right: 15px;
-    }
-    .frosted-glass-card {
-        padding: 1rem;
-    }
-    .upload-area {
-        padding: 2rem 1rem;
-    }
-    .btn-upload-elegant {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        font-size: 1.1rem;
-    }
-    .section-title-elegant {
-        font-size: 1.8rem;
-    }
-    .lightbox-content img {
-        border-width: 2px; /* Smaller border on mobile */
-    }
-}
-
-/* --- Lightbox Fix: Ensure close button is always clickable --- */
-
-.lightbox.active {
-    /* Ensure the entire lightbox is visible */
-    display: flex;
-}
-
-.close-lightbox {
-    /* Push the close button to the top layer */
-    z-index: 10002; /* Higher than all other elements */
-    
-    /* Ensure it's not hidden behind the animated content */
-    color: #fff; 
-    font-size: 3rem; 
-    font-weight: 300; 
-    position: absolute;
-    top: 20px;
-    right: 35px;
-    cursor: pointer;
-    transition: 0.2s;
-    opacity: 0.8;
-}
-
-.close-lightbox:hover {
     opacity: 1;
-    color: #ff6b6b; /* Optional: Change color on hover for feedback */
 }
 
-/* Also ensure nav arrows are above content */
-.lightbox-nav {
-    z-index: 10001; 
+/* Contacts List Styling */
+.contacts-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Individual Contact Card */
+.contact-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border-left: 5px solid #BB86FC; /* Purple accent for contacts */
+    transition: background-color 0.3s;
+}
+
+.contact-card:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.contact-info h5 {
+    color: #E0E0E0;
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 1.1rem;
+}
+
+.contact-info p {
+    color: #A0A0A0;
+    margin-bottom: 2px;
+    font-size: 0.9rem;
+}
+
+.delete-contact-btn {
+    background-color: #ff6b6b;
+    border: none;
+}
+.delete-contact-btn:hover {
+    background-color: #e64e4e;
 }
