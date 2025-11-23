@@ -1,8 +1,8 @@
-# requirements.txt
-Flask
+flask
+flask-bcrypt
+flask-session
 pymongo
 python-dotenv
-flask-bcrypt
-gunicorn
 cloudinary
-flask-session
+gunicorn
+vobject  <--- यह सबसे महत्वपूर्ण है!
