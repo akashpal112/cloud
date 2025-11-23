@@ -1,6 +1,6 @@
-/* ---------------------------------
-   SERVER API & CONFIGURATION
------------------------------------*/
+/* ----------------------------------------------------------------------
+   script.js - Akshu Cloud Gallery Frontend Logic (Multi-Upload & Contacts)
+----------------------------------------------------------------------*/
 const SERVER_URL = ''; // Empty means same domain (e.g., http://127.0.0.1:5000)
 const LOGIN_TOKEN = 'isLoggedIn'; 
 let galleryItems = []; // To hold the photo data for the current user
@@ -8,7 +8,6 @@ let currentIndex = 0; // For lightbox navigation
 
 // --- 1. AUTHENTICATION HANDLERS ---
 
-// 1. REGISTER
 async function handleRegister(event) {
     event.preventDefault();
     const username = document.getElementById('registerUsername').value;
@@ -16,7 +15,7 @@ async function handleRegister(event) {
     const messageElement = document.getElementById('registerMessage');
     
     messageElement.textContent = "Registering...";
-    messageElement.style.color = 'yellow'; // Indicate processing
+    messageElement.style.color = 'yellow'; 
 
     try {
         const response = await fetch(`${SERVER_URL}/api/register`, {
@@ -25,20 +24,18 @@ async function handleRegister(event) {
             body: JSON.stringify({ username, password })
         });
         const data = await response.json();
-        messageElement.style.color = data.success ? '#6bff6b' : '#ff6b6b';
+        messageElement.style.color = data.success ? '#03DAC6' : '#FF6B6B';
         messageElement.textContent = data.message;
         if (data.success) {
-            // Optional: Auto-redirect to login after a short delay
             setTimeout(() => { window.location.href = 'login.html'; }, 2000);
         }
     } catch (error) {
         console.error("Register Error:", error);
         messageElement.textContent = 'Server Error. Please try again later.';
-        messageElement.style.color = '#ff6b6b';
+        messageElement.style.color = '#FF6B6B';
     }
 }
 
-// 2. LOGIN
 async function handleLogin(event) {
     event.preventDefault();
     const username = document.getElementById('loginUsername').value; 
@@ -46,7 +43,7 @@ async function handleLogin(event) {
     const messageElement = document.getElementById('loginMessage');
     
     messageElement.textContent = "Logging in...";
-    messageElement.style.color = 'yellow'; // Indicate processing
+    messageElement.style.color = 'yellow'; 
 
     try {
         const response = await fetch(`${SERVER_URL}/api/login`, {
@@ -58,250 +55,388 @@ async function handleLogin(event) {
         
         if (data.success) {
             localStorage.setItem(LOGIN_TOKEN, 'true'); 
-            localStorage.setItem('username', data.username); // Store username for display
-            window.location.href = 'gallery.html'; // Redirect to gallery
+            localStorage.setItem('username', data.username);
+            window.location.href = 'gallery.html';
         } else {
-            messageElement.style.color = '#ff6b6b';
+            messageElement.style.color = '#FF6B6B';
             messageElement.textContent = data.message;
         }
     } catch (error) {
         console.error("Login Error:", error);
         messageElement.textContent = 'Server Error. Please try again later.';
-        messageElement.style.color = '#ff6b6b';
+        messageElement.style.color = '#FF6B6B';
     }
 }
 
-// 3. LOGOUT
 async function logout() {
     try {
-        const response = await fetch(`${SERVER_URL}/api/logout`, { method: 'POST' });
-        const data = await response.json();
-        if (!data.success) {
-            console.warn("Logout API reported an issue, but proceeding with client logout:", data.message);
-        }
+        await fetch(`${SERVER_URL}/api/logout`, { method: 'POST' });
     } catch (error) {
         console.error("Logout API failed, but continuing client logout.", error);
     } finally {
-        // Always clear client-side data and redirect, regardless of API response
         localStorage.removeItem(LOGIN_TOKEN);
         localStorage.removeItem('username');
         window.location.href = 'index.html'; 
     }
 }
 
-// --- 2. GALLERY MANAGEMENT ---
+// --- 2. PHOTO UPLOAD HANDLERS (FIXED LOADING/DISPLAY ISSUE) ---
 
-// Function to fetch the current user's photos
+async function uploadSingleFile(file) {
+    const formData = new FormData();
+    formData.append('file', file); 
+    
+    try {
+        const response = await fetch(`${SERVER_URL}/api/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        return data.success;
+
+    } catch (error) {
+        console.error(`Network error uploading ${file.name}:`, error);
+        return false;
+    }
+}
+
+async function handleMultipleUpload(event) {
+    const files = event.target.files;
+    const uploadMessageElement = document.getElementById('uploadMessage');
+    
+    if (!files || files.length === 0) {
+        uploadMessageElement.textContent = 'No files selected.';
+        uploadMessageElement.style.color = '#FF6B6B';
+        return;
+    }
+
+    let successfulUploads = 0;
+    let failedUploads = 0;
+    const totalFiles = files.length;
+    
+    uploadMessageElement.textContent = `Starting upload of ${totalFiles} file(s)...`;
+    uploadMessageElement.style.color = 'yellow';
+    
+    // Process files sequentially
+    for (let i = 0; i < totalFiles; i++) {
+        const file = files[i];
+        
+        uploadMessageElement.innerHTML = `
+            Uploading **${file.name}** (${i + 1}/${totalFiles})... 
+            <br>Success: ${successfulUploads} | Failed: ${failedUploads}
+        `;
+        
+        const success = await uploadSingleFile(file); 
+        
+        if (success) {
+            successfulUploads++;
+        } else {
+            failedUploads++;
+        }
+    }
+    
+    // Final status update
+    const finalMessage = `Upload Complete! ${successfulUploads} files uploaded successfully. ${failedUploads > 0 ? failedUploads + ' failed.' : ''}`;
+    uploadMessageElement.innerHTML = `<span class='animate__animated animate__pulse'>${finalMessage}</span>`;
+    uploadMessageElement.style.color = failedUploads === 0 ? '#03DAC6' : 'orange';
+
+    // Reload gallery to show newly uploaded photos
+    await fetchGalleryImages(); 
+
+    // Reset the input field
+    event.target.value = '';
+}
+
+
+// --- 3. GALLERY MANAGEMENT ---
+
 async function fetchGalleryImages() {
     const galleryDiv = document.getElementById('gallery');
     const imageCountSpan = document.getElementById('imageCount');
-    const gallerySection = document.getElementById('gallerySection');
     
-    // Show spinner while loading
-    if (gallerySection) { // Ensure gallerySection exists
-        gallerySection.innerHTML = `
-            <h1 class="text-center mb-4"><i class="fas fa-images me-2"></i>My Private Collection</h1>
-            <div class="upload-area mb-5 text-center">
-                <label for="uploadInput" class="btn btn-info btn-lg">
-                    <i class="fas fa-cloud-upload-alt me-2"></i> Upload New Photo
-                </label>
-                <input type="file" id="uploadInput" style="display: none;" accept="image/*">
-                <p id="uploadMessage" class="mt-3 font-weight-bold text-white"></p>
-                <p class="mt-2 text-secondary">Photos are saved securely in your private cloud.</p>
-            </div>
-            <div class="gallery-grid" id="gallery">
-                <div class="col-12 text-center text-white-50"><i class="fas fa-spinner fa-spin fa-2x"></i> Loading Photos...</div>
-            </div>
-            <div class="text-center mt-5">
-                <p class="text-white-50">Total Images: <span id="imageCount">0</span></p>
+    // Show loading spinner ONLY in the gallery area
+    if (galleryDiv) { 
+        galleryDiv.innerHTML = `
+            <div class="text-center p-5 animate__animated animate__fadeIn">
+                <i class="fas fa-spinner fa-spin fa-3x text-gold-gradient"></i> 
+                <p class="mt-3 text-white-75">Loading your precious memories...</p>
             </div>
         `;
-        // Re-attach upload listener as innerHTML overwrites it
-        const uploadInput = document.getElementById('uploadInput');
-        if (uploadInput) uploadInput.addEventListener('change', uploadPhoto);
     }
-
+    
     try {
         const response = await fetch(`${SERVER_URL}/api/photos`);
         const data = await response.json();
 
-        if (response.status === 401) {
-            // Session expired or unauthorized, force logout
-            localStorage.removeItem(LOGIN_TOKEN);
-            localStorage.removeItem('username');
-            window.location.href = 'login.html'; // Redirect to login
-            return;
-        }
+        if (response.status === 401) throw new Error(data.message || "Unauthorized access.");
+        
+        galleryItems = data.photos;
+        
+        if (imageCountSpan) imageCountSpan.textContent = galleryItems.length;
 
-        if (data.success) {
-            galleryItems = data.photos; // Update global array
-            renderGallery(); // Render the photos
-        } else {
-            // Display error if API call was successful but returned success: false
-            if (galleryDiv) galleryDiv.innerHTML = `<div class="col-12 text-center text-danger">Error loading photos: ${data.message}</div>`;
-            if (imageCountSpan) imageCountSpan.textContent = '0';
+        if (galleryDiv) {
+            galleryDiv.innerHTML = ''; 
+            if (galleryItems.length === 0) {
+                galleryDiv.innerHTML = `
+                    <div class="col-12 text-center p-5 animate__animated animate__fadeIn">
+                        <i class="fas fa-box-open fa-5x text-gold-gradient mb-3"></i>
+                        <p class="fs-4 text-white-75">Your private gallery is empty. Upload your first photo!</p>
+                    </div>
+                `;
+            } else {
+                galleryItems.forEach((photo, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'gallery-card animate__animated animate__zoomIn';
+                    card.setAttribute('data-index', index);
+                    
+                    card.innerHTML = `
+                        <img src="${photo.url}" alt="User Photo" class="img-fluid" loading="lazy" onclick="openLightbox(${index})">
+                        <div class="card-overlay">
+                            <span class="delete-btn" onclick="event.stopPropagation(); deletePhoto('${photo._id}', '${photo.public_id}')">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </span>
+                            <span class="view-btn" onclick="openLightbox(${index})">
+                                <i class="fas fa-expand"></i> View
+                            </span>
+                        </div>
+                    `;
+                    galleryDiv.appendChild(card);
+                });
+            }
         }
 
     } catch (error) {
-        console.error("Fetch Gallery Images Error:", error);
-        if (galleryDiv) galleryDiv.innerHTML = '<div class="col-12 text-center text-danger">Could not connect to the server or fetch photos.</div>';
-        if (imageCountSpan) imageCountSpan.textContent = '0';
-    }
-}
-
-// Function to render the fetched photos
-function renderGallery() {
-    const galleryDiv = document.getElementById('gallery');
-    const imageCountSpan = document.getElementById('imageCount');
-
-    if (!galleryDiv) {
-        console.error("Gallery div not found.");
-        return;
-    }
-    galleryDiv.innerHTML = ''; // Clear previous content
-
-    if (galleryItems.length === 0) {
-        galleryDiv.innerHTML = '<div class="col-12 text-center text-white-50"><h3>No photos yet. Upload one!</h3></div>';
-        if (imageCountSpan) imageCountSpan.textContent = '0';
-        return;
-    }
-
-    galleryItems.forEach((item, index) => {
-        // FIX 1: Change keys from item.src/item.title/item.date/item._id to item.url/item.filename/item.upload_date/item.id
-        const itemHtml = `
-            <div class="gallery-item" data-index="${index}" onclick="openLightbox(${index})">
-                <img src="${item.url}" alt="${item.filename}" class="img-fluid">
-                <div class="gallery-overlay">
-                    <div class="photo-info">
-                        <i class="fas fa-camera"></i> ${item.filename}
-                        <div class="photo-date"><i class="fas fa-calendar-alt"></i> ${item.upload_date}</div>
-                    </div>
-                    <div class="delete-btn" onclick="event.stopPropagation(); deletePhoto('${item.id}')"><i class="fas fa-trash"></i> Delete</div>
-                </div>
+        console.error("Fetch Gallery Error:", error);
+        if (galleryDiv) galleryDiv.innerHTML = `
+            <div class="col-12 text-center p-5 text-danger-light animate__animated animate__shakeX">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                <p class="fs-4 text-danger">Error loading photos: ${error.message}</p>
             </div>
         `;
-        galleryDiv.insertAdjacentHTML('beforeend', itemHtml);
-    });
-
-    if (imageCountSpan) imageCountSpan.textContent = galleryItems.length;
+    }
 }
 
-// Function to handle photo upload
-async function uploadPhoto(event) {
-    const file = event.target.files[0];
+async function deletePhoto(photoId, publicId) {
+    if (!confirm('Are you sure you want to permanently delete this photo?')) return;
+    
     const uploadMessageElement = document.getElementById('uploadMessage');
-    if (!file) return;
-
-    const formData = new FormData();
-    // FIX 2: Change key from 'photo' to 'file' to match app.py
-    formData.append('file', file);
-
-    if (uploadMessageElement) {
-        uploadMessageElement.style.color = 'yellow';
-        uploadMessageElement.textContent = `Uploading ${file.name}...`;
-    }
+    uploadMessageElement.textContent = 'Deleting photo...';
+    uploadMessageElement.style.color = 'yellow';
 
     try {
-        // FIX 3: Change API route from /api/photos to /api/upload
-        const response = await fetch(`${SERVER_URL}/api/upload`, {
-            method: 'POST',
-            body: formData,
+        const response = await fetch(`${SERVER_URL}/api/photos/${photoId}`, {
+            method: 'DELETE',
+            headers: { 'Content-ID': publicId }
         });
+        
         const data = await response.json();
 
         if (data.success) {
-            if (uploadMessageElement) {
-                uploadMessageElement.style.color = '#6bff6b';
-                uploadMessageElement.textContent = `Upload successful: ${data.message}`; // Use data.message
-            }
-            fetchGalleryImages(); // Refresh gallery to show the new photo
+            uploadMessageElement.textContent = data.message;
+            uploadMessageElement.style.color = '#03DAC6';
+            closeLightbox(); 
+            fetchGalleryImages();
         } else {
-            if (uploadMessageElement) {
-                uploadMessageElement.style.color = '#ff6b6b';
-                uploadMessageElement.textContent = `Upload failed: ${data.message}`;
-            }
+            uploadMessageElement.textContent = `Deletion Failed: ${data.message}`;
+            uploadMessageElement.style.color = '#FF6B6B';
         }
-
+        
     } catch (error) {
-        console.error("Upload Photo Error:", error);
-        if (uploadMessageElement) {
-            uploadMessageElement.style.color = '#ff6b6b';
-            uploadMessageElement.textContent = 'Server Error during upload.';
-        }
-    } finally {
-        event.target.value = null; // Clear the file input
-        if (uploadMessageElement) {
-            setTimeout(() => { uploadMessageElement.textContent = ''; }, 3000);
-        }
+        console.error("Delete Error:", error);
+        uploadMessageElement.textContent = 'An unexpected error occurred during photo deletion.';
+        uploadMessageElement.style.color = '#FF6B6B';
     }
 }
 
-// Function to handle photo deletion
-async function deletePhoto(photoId) {
-    if (!confirm("Are you sure you want to delete this photo? This cannot be undone.")) {
-        return;
+
+// --- 4. LIGHTBOX HANDLERS ---
+
+function openLightbox(index) {
+    if (galleryItems.length === 0) return;
+    
+    currentIndex = index;
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+
+    lightboxImg.src = galleryItems[currentIndex].url;
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    lightbox.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+function navigateLightbox(direction) {
+    currentIndex += direction;
+    
+    if (currentIndex < 0) {
+        currentIndex = galleryItems.length - 1;
+    } else if (currentIndex >= galleryItems.length) {
+        currentIndex = 0;
+    }
+    
+    const lightboxImg = document.getElementById('lightbox-img');
+    lightboxImg.style.opacity = 0;
+    setTimeout(() => {
+        lightboxImg.src = galleryItems[currentIndex].url;
+        lightboxImg.style.opacity = 1;
+    }, 200); 
+}
+
+
+// ----------------------------------------------------------------------
+// --- 5. PRIVATE CONTACTS HANDLERS (NEW SECTION) ---
+// ----------------------------------------------------------------------
+
+async function fetchContacts() {
+    const contactsListDiv = document.getElementById('contactsList');
+    const contactCountSpan = document.getElementById('contactCount');
+    const contactCountFooterSpan = document.getElementById('contactCountFooter');
+    
+    if (contactsListDiv) {
+        contactsListDiv.innerHTML = `
+            <div class="text-center p-4">
+                <i class="fas fa-spinner fa-spin fa-2x text-gold-gradient"></i> 
+                <p class="mt-2 text-white-75">Loading private contacts...</p>
+            </div>
+        `;
     }
 
     try {
-        // FIX 4: Change API route from /api/photos/${photoId} to /api/delete/${photoId}
-        const response = await fetch(`${SERVER_URL}/api/delete/${photoId}`, {
+        const response = await fetch(`${SERVER_URL}/api/contacts`);
+        const data = await response.json();
+
+        if (contactsListDiv) {
+            contactsListDiv.innerHTML = '';
+        }
+        
+        if (data.success && data.contacts.length > 0) {
+            data.contacts.forEach(contact => {
+                const contactCard = document.createElement('div');
+                contactCard.className = 'contact-card animate__animated animate__fadeInUp';
+                contactCard.innerHTML = `
+                    <div class="contact-info">
+                        <h5><i class="fas fa-user-circle me-2"></i> ${contact.name}</h5>
+                        <p><i class="fas fa-phone-alt me-2"></i> ${contact.phone}</p>
+                        ${contact.email && contact.email !== 'N/A' ? `<p><i class="fas fa-envelope me-2"></i> ${contact.email}</p>` : ''}
+                    </div>
+                    <button class="btn btn-sm btn-danger delete-contact-btn" onclick="deleteContact('${contact._id}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                contactsListDiv.appendChild(contactCard);
+            });
+            
+            if (contactCountSpan) contactCountSpan.textContent = data.contacts.length;
+            if (contactCountFooterSpan) contactCountFooterSpan.textContent = data.contacts.length;
+
+        } else if (contactsListDiv) {
+             contactsListDiv.innerHTML = `
+                <div class="text-center p-5">
+                    <i class="fas fa-address-book fa-5x text-gold-gradient mb-3"></i>
+                    <p class="fs-4 text-white-75">No private contacts saved yet. Add one!</p>
+                </div>
+            `;
+             if (contactCountSpan) contactCountSpan.textContent = 0;
+             if (contactCountFooterSpan) contactCountFooterSpan.textContent = 0;
+        }
+
+    } catch (error) {
+        console.error("Fetch Contacts Error:", error);
+        if (contactsListDiv) contactsListDiv.innerHTML = `<p class="text-danger p-4">Error loading contacts: ${error.message}</p>`;
+    }
+}
+
+async function handleAddContact(event) {
+    event.preventDefault();
+    const name = document.getElementById('contactName').value;
+    const phone = document.getElementById('contactPhone').value;
+    const email = document.getElementById('contactEmail').value;
+    const messageElement = document.getElementById('contactMessage');
+    
+    if (!name || !phone) {
+        messageElement.textContent = "Name and Phone are required.";
+        messageElement.style.color = '#FF6B6B';
+        return;
+    }
+    
+    messageElement.textContent = "Saving contact...";
+    messageElement.style.color = 'yellow';
+
+    try {
+        const response = await fetch(`${SERVER_URL}/api/contacts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone, email })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            messageElement.textContent = data.message;
+            messageElement.style.color = '#03DAC6';
+            document.getElementById('addContactForm').reset();
+            fetchContacts();
+        } else {
+            messageElement.textContent = data.message;
+            messageElement.style.color = '#FF6B6B';
+        }
+    } catch (error) {
+        console.error("Add Contact Error:", error);
+        messageElement.textContent = 'Server Error. Failed to save contact.';
+        messageElement.style.color = '#FF6B6B';
+    }
+}
+
+async function deleteContact(contactId) {
+    if (!confirm('Are you sure you want to permanently delete this contact?')) return;
+    
+    const messageElement = document.getElementById('contactMessage');
+    messageElement.textContent = 'Deleting contact...';
+    messageElement.style.color = 'yellow';
+    
+    try {
+        const response = await fetch(`${SERVER_URL}/api/contacts/${contactId}`, {
             method: 'DELETE'
         });
         const data = await response.json();
-
+        
         if (data.success) {
-            // Use item.id for comparison as it is consistent now
-            galleryItems = galleryItems.filter(item => item.id !== photoId); 
-            renderGallery();
-            alert("Photo deleted successfully!");
+            messageElement.textContent = data.message;
+            messageElement.style.color = '#03DAC6';
+            fetchContacts();
         } else {
-            alert(`Deletion failed: ${data.message}`);
+            messageElement.textContent = data.message;
+            messageElement.style.color = '#FF6B6B';
         }
     } catch (error) {
-        console.error("Delete Photo Error:", error);
-        alert("Server Error during deletion.");
+        console.error("Delete Contact Error:", error);
+        messageElement.textContent = 'An unexpected error occurred during contact deletion.';
+        messageElement.style.color = '#FF6B6B';
     }
 }
 
-// --- 3. LIGHTBOX FUNCTIONS ---
 
-function openLightbox(index) {
-    currentIndex = index;
-    updateLightbox(); 
-    document.getElementById('lightbox').classList.add('active');
-}
-function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('active');
-}
-function navigateLightbox(dir) {
-    currentIndex += dir;
-    if (currentIndex < 0) currentIndex = galleryItems.length - 1;
-    if (currentIndex >= galleryItems.length) currentIndex = 0;
-    updateLightbox();
-}
-function updateLightbox() {
-    const item = galleryItems[currentIndex];
-    const lightboxImg = document.getElementById('lightbox-img');
-    if (lightboxImg && item) {
-        // FIX 5: Change keys from item.src/item.title to item.url/item.filename
-        lightboxImg.src = item.url;
-        lightboxImg.alt = item.filename;
-    }
-}
-
-// --- 4. INITIALIZATION ---
+// --- 6. INITIALIZATION ---
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Attach form handlers
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) loginForm.addEventListener('submit', handleLogin);
     
+    // Attach Auth handlers
     const registerForm = document.getElementById('registerForm');
     if (registerForm) registerForm.addEventListener('submit', handleRegister);
 
-    // 2. Gallery Page Logic
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) logoutButton.addEventListener('click', logout);
+
+
+    // Gallery Initialization
     if (document.body.classList.contains('gallery-page')) {
-        // Fetch login status from server
         const statusResponse = await fetch(`${SERVER_URL}/api/status`);
         const statusData = await statusResponse.json();
         
@@ -316,16 +451,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (statusData.isLoggedIn) {
             if (loginPrompt) loginPrompt.style.display = "none";
             if (gallerySection) gallerySection.style.display = "block";
-            fetchGalleryImages(); // Load data from server
             
-            // Attach Upload Listener (Ensure it's attached after gallerySection is visible)
+            // Load Gallery and Contacts
+            fetchGalleryImages(); 
+            fetchContacts();
+
+            // Attach Upload Listener 
             const uploadInput = document.getElementById('uploadInput');
-            if(uploadInput) uploadInput.addEventListener('change', uploadPhoto);
+            if(uploadInput) uploadInput.addEventListener('change', handleMultipleUpload);
+            
+            // Attach Contact Form Listener
+            const addContactForm = document.getElementById('addContactForm');
+            if(addContactForm) addContactForm.addEventListener('submit', handleAddContact);
+            
         } else {
-            // User is not logged in
             if (loginPrompt) loginPrompt.style.display = "block";
             if (gallerySection) gallerySection.style.display = "none";
-            // Optionally, clear local storage items if status is not logged in
             localStorage.removeItem(LOGIN_TOKEN);
             localStorage.removeItem('username');
         }
