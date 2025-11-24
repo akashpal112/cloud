@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Akshu Cloud Gallery - Premium Storage</title>
     <meta name="keywords" content="My Cloud Gallery, private photos, cloud storage, online gallery, photo collection, secure, fast">
     <meta name="description" content="Akshu Cloud Gallery – secure, personal photos and memories. Experience blazing fast access and beautiful organization with a premium aesthetic.">
@@ -12,6 +12,7 @@
     <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style.css">
     
     <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/svgs/solid/cloud-upload-alt.svg">
@@ -28,18 +29,21 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto align-items-lg-center">
                         <li class="nav-item">
                             <a class="nav-link" href="#features">Features</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#how-it-works">How It Works</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="#security">Security</a>
                         </li>
-                        <li class="nav-item ms-lg-3">
-                            <a class="btn btn-cta-primary" href="login.html"><i class="fas fa-sign-in-alt me-1"></i> Login / Gallery</a>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#pricing">Plans</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#testimonials">Reviews</a>
+                        </li>
+                        <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+                            <a class="btn btn-cta-primary w-100" href="login.html"><i class="fas fa-sign-in-alt me-1"></i> Login / Gallery</a>
                         </li>
                     </ul>
                 </div>
@@ -51,41 +55,62 @@
         <div class="hero-overlay"></div>
         <div class="container hero-content" data-aos="fade-up">
             <h1 class="display-1 mb-4">
-                Redefining <span class="typed-text-output text-accent"></span>
+                Your <span class="typed-text-output text-accent"></span> Vault
             </h1>
-            <h2 class="lead mb-5 text-muted-text">
-                Your private digital world secured by the best in cloud technology. Blazing fast, ultra-secure.
+            <h2 class="lead mb-5" style="color: var(--color-muted-text);">
+                Ultra-secure, blazing-fast, and beautifully designed storage for your most precious digital life.
             </h2>
             <a href="register.html" class="btn btn-hero-cta" data-aos="zoom-in" data-aos-delay="500">
-                <i class="fas fa-user-plus me-2"></i> Create Your Free Account
+                <i class="fas fa-user-plus me-2"></i> Get Started - It's Free!
             </a>
         </div>
     </section>
 
     <section id="features" class="py-5 features-section">
         <div class="container text-center py-5">
-            <h2 class="section-heading mb-3" data-aos="fade-down">Why Akshu Cloud?</h2>
-            <p class="section-subheading mb-5" data-aos="fade-down" data-aos-delay="100">The ultimate feature set for your personal gallery.</p>
-            <div class="row">
-                <div class="col-md-4 mb-4" data-aos="fade-right">
+            <h2 class="section-heading mb-3" data-aos="fade-down">Core Strengths of Akshu Cloud</h2>
+            <p class="section-subheading mb-5" data-aos="fade-down" data-aos-delay="100">Designed for performance, privacy, and peace of mind.</p>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4" data-aos="fade-up">
                     <div class="feature-card">
-                        <i class="fas fa-rocket mb-3 feature-icon-accent"></i>
-                        <h3>Blazing Fast Speed</h3>
-                        <p>Optimized image loading and CDN delivery ensure your photos are always available instantly, anywhere in the world.</p>
+                        <i class="fas fa-microchip mb-3 feature-icon-accent"></i>
+                        <h3>Optimized Performance</h3>
+                        <p>Leveraging Cloudinary's CDN for near-instant photo delivery globally. Speed is our promise.</p>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="200">
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-card">
+                        <i class="fas fa-user-secret mb-3 feature-icon-accent"></i>
+                        <h3>True Private Vault</h3>
+                        <p>Your photos and contacts are isolated and protected within your user session. No public links, no leaks.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-card">
+                        <i class="fas fa-address-book mb-3 feature-icon-accent"></i>
+                        <h3>Contact Import (VCF)</h3>
+                        <p>Securely upload and manage your personal address book using industry-standard VCF files.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="600">
                     <div class="feature-card">
                         <i class="fas fa-mobile-alt mb-3 feature-icon-accent"></i>
-                        <h3>Responsive Design</h3>
-                        <p>Flawless experience across all devices—desktop, tablet, and mobile. Your gallery adapts perfectly.</p>
+                        <h3>Fully Responsive UI</h3>
+                        <p>The entire platform is built with a mobile-first approach, ensuring a flawless experience on any screen size.</p>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4" data-aos="fade-left">
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="800">
                     <div class="feature-card">
-                        <i class="fas fa-infinity mb-3 feature-icon-accent"></i>
-                        <h3>Unlimited Storage</h3>
-                        <p>Never worry about running out of space. Upload and store as many high-resolution photos as you want.</p>
+                        <i class="fas fa-lock mb-3 feature-icon-accent"></i>
+                        <h3>End-to-End Security</h3>
+                        <p>Protected by Bcrypt and server-side session management. Your data's integrity is guaranteed.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="1000">
+                    <div class="feature-card">
+                        <i class="fas fa-download mb-3 feature-icon-accent"></i>
+                        <h3>Instant Access</h3>
+                        <p>Get to your files immediately after login. No lag, just instant access to your digital life.</p>
                     </div>
                 </div>
             </div>
@@ -94,29 +119,29 @@
 
     <section id="how-it-works" class="py-5 bg-dark-card">
         <div class="container text-center py-5">
-            <h2 class="section-heading mb-3" data-aos="fade-down">How It Works</h2>
-            <p class="section-subheading mb-5" data-aos="fade-down" data-aos-delay="100">Simple three steps to secure your memories.</p>
-            <div class="row text-center">
+            <h2 class="section-heading mb-3" data-aos="fade-down">Your Journey to Secure Storage</h2>
+            <p class="section-subheading mb-5" data-aos="fade-down" data-aos-delay="100">Simple 3 steps to set up your vault.</p>
+            <div class="row text-center g-5">
                 
                 <div class="col-md-4 step-card" data-aos="flip-up">
                     <div class="step-circle mb-3">1</div>
                     <i class="fas fa-user-check fa-3x text-accent mb-3"></i>
-                    <h4>Register & Login</h4>
-                    <p class="text-muted-text">Create your account instantly and log in securely.</p>
+                    <h4>Create Account</h4>
+                    <p class="text-muted-text">Register with your secure password. We handle the rest.</p>
                 </div>
                 
                 <div class="col-md-4 step-card" data-aos="flip-up" data-aos-delay="300">
                     <div class="step-circle mb-3">2</div>
                     <i class="fas fa-cloud-upload-alt fa-3x text-accent mb-3"></i>
-                    <h4>Upload Photos</h4>
-                    <p class="text-muted-text">Drag and drop your photos into your private gallery.</p>
+                    <h4>Upload Everything</h4>
+                    <p class="text-muted-text">Use the multi-file uploader for photos or the VCF importer for contacts.</p>
                 </div>
                 
                 <div class="col-md-4 step-card" data-aos="flip-up" data-aos-delay="600">
                     <div class="step-circle mb-3">3</div>
-                    <i class="fas fa-images fa-3x text-accent mb-3"></i>
-                    <h4>View & Share</h4>
-                    <p class="text-muted-text">Access your gallery from anywhere, anytime, securely.</p>
+                    <i class="fas fa-globe-americas fa-3x text-accent mb-3"></i>
+                    <h4>Access Anywhere</h4>
+                    <p class="text-muted-text">Login securely from any device to view and manage your content.</p>
                 </div>
                 
             </div>
@@ -126,20 +151,70 @@
     <section id="security" class="py-5 security-section">
         <div class="container py-5">
             <div class="row align-items-center">
-                <div class="col-md-6 mb-4 mb-md-0" data-aos="fade-right">
+                <div class="col-md-6 mb-5 mb-md-0" data-aos="fade-right">
                     <div class="security-content">
-                        <h2 class="section-heading mb-3">Uncompromised Security</h2>
-                        <p class="section-subheading mb-4">We use state-of-the-art encryption and modern infrastructure to keep your data safe.</p>
+                        <h2 class="section-heading mb-4 text-secondary-accent">Zero-Trust Architecture</h2>
+                        <p class="section-subheading mb-4 text-start">Your privacy is not a feature, it's the foundation. We use a layered approach to security.</p>
                         <ul class="security-list">
-                            <li><i class="fas fa-check-circle me-2 text-accent"></i> Industry-leading Bcrypt Password Hashing</li>
-                            <li><i class="fas fa-check-circle me-2 text-accent"></i> Cloudinary Secure Storage for Photos</li>
-                            <li><i class="fas fa-check-circle me-2 text-accent"></i> Modern Python/Flask Backend</li>
-                            <li><i class="fas fa-check-circle me-2 text-accent"></i> Secure Server-Side Session Management</li>
+                            <li><i class="fas fa-key me-3 text-accent"></i> **Bcrypt Hashing**: Passwords stored using the most secure hashing standard.</li>
+                            <li><i class="fas fa-database me-3 text-accent"></i> **MongoDB & Flask**: Modern, secure database and backend framework.</li>
+                            <li><i class="fas fa-lock me-3 text-accent"></i> **Data Isolation**: Each user's data is strictly linked to their session ID.</li>
+                            <li><i class="fas fa-file-shield me-3 text-accent"></i> **VCF Security**: Dedicated API for importing sensitive contact files securely.</li>
                         </ul>
                     </div>
                 </div>
                 <div class="col-md-6 text-center" data-aos="fade-left" data-aos-delay="200">
-                    <i class="fas fa-shield-alt fa-10x text-secondary-accent-glow"></i>
+                    <i class="fas fa-lock fa-10x text-secondary-accent-glow"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="pricing" class="py-5 features-section">
+        <div class="container text-center py-5">
+            <h2 class="section-heading mb-3" data-aos="fade-down">Transparent Plans</h2>
+            <p class="section-subheading mb-5" data-aos="fade-down" data-aos-delay="100">Simple, powerful, and built for everyone.</p>
+            <div class="row justify-content-center g-4">
+                
+                <div class="col-lg-5 col-md-8" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="feature-card p-5" style="border-left-color: var(--color-accent);">
+                        <h3 class="mb-4 text-accent">The Akshu Standard</h3>
+                        <div class="d-flex align-items-end justify-content-center mb-4">
+                            <span class="display-3 fw-bold text-light-text me-2">FREE</span>
+                            <span class="fs-4 text-muted-text">forever</span>
+                        </div>
+                        <p class="text-muted-text mb-4">Everything you need to secure your memories and contacts.</p>
+                        <ul class="list-unstyled text-start mx-auto" style="max-width: 300px;">
+                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> Unlimited Photo Storage</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> Private Contact Book</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> VCF Import/Delete Access</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> All Security Features</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> Fast CDN Delivery</li>
+                        </ul>
+                        <a href="register.html" class="btn btn-primary-accent w-100 mt-4"><i class="fas fa-bolt me-2"></i> Choose This Plan</a>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <section id="testimonials" class="py-5 bg-dark-card">
+        <div class="container text-center py-5">
+            <h2 class="section-heading mb-3" data-aos="fade-down">What Our Users Say</h2>
+            <p class="section-subheading mb-5" data-aos="fade-down" data-aos-delay="100">Trusted by early adopters for security and speed.</p>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-8" data-aos="fade-up">
+                    <div class="card p-5 feature-card">
+                        <i class="fas fa-quote-left fa-2x text-secondary-accent mb-4"></i>
+                        <blockquote class="blockquote mb-4 fs-4" style="color: var(--color-light-text);">
+                            "I finally have a private space for my photos and contacts that isn't connected to the big social media clouds. The VCF import is a life-saver, and the speed is incredible."
+                        </blockquote>
+                        <footer class="blockquote-footer fs-6 text-end" style="color: var(--color-muted-text);">
+                            Ritu Sharma, <cite title="Source Title">Private User</cite>
+                        </footer>
+                    </div>
                 </div>
             </div>
         </div>
@@ -147,10 +222,10 @@
 
     <section class="cta-section text-center py-5">
         <div class="container">
-            <h2 class="section-heading mb-3" data-aos="zoom-in">Join the Next Generation of Cloud Storage</h2>
-            <p class="section-subheading mb-4" data-aos="zoom-in" data-aos-delay="100">Ready to experience the best? Your private gallery awaits.</p>
+            <h2 class="section-heading mb-3" data-aos="zoom-in">Your Private Digital World Awaits</h2>
+            <p class="section-subheading mb-5" data-aos="zoom-in" data-aos-delay="100">Start your journey to secured and organized memories today.</p>
             <div data-aos="fade-up" data-aos-delay="300">
-                <a href="register.html" class="btn btn-cta-primary btn-lg **mb-3 mb-md-0 me-md-3**">
+                <a href="register.html" class="btn btn-hero-cta btn-lg me-md-4 mb-3 mb-md-0">
                     <i class="fas fa-bolt me-2"></i> Register Now
                 </a>
                 <a href="login.html" class="btn btn-cta-secondary btn-lg">
@@ -162,24 +237,24 @@
 
     <footer class="footer-section">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-4 mb-md-0">
+            <div class="row g-4">
+                <div class="col-md-4">
                     <h5 class="footer-logo"><i class="fas fa-cloud-upload-alt me-2 text-accent"></i> Akshu Cloud Gallery</h5>
                     <p class="text-muted-text">Your secure, personal, and permanent vault for all your digital memories. Built for speed and privacy.</p>
                     <div class="social-icons mt-3">
-                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>
                         <a href="#"><i class="fab fa-instagram"></i></a>
                         <a href="#"><i class="fab fa-linkedin-in"></i></a>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4 mb-md-0">
+                <div class="col-md-4">
                     <h5>Quick Links</h5>
                     <ul>
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="login.html">Login</a></li>
-                        <li><a href="#security">Privacy & Security</a></li>
-                        <li><a href="#features">Features</a></li>
+                        <li><a href="index.html"><i class="fas fa-home me-2"></i> Home</a></li>
+                        <li><a href="login.html"><i class="fas fa-user-check me-2"></i> Login</a></li>
+                        <li><a href="#security"><i class="fas fa-lock me-2"></i> Privacy & Security</a></li>
+                        <li><a href="#features"><i class="fas fa-star me-2"></i> Features</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4">
@@ -216,23 +291,23 @@
         // 2. AOS Initialization (Smooth section reveal)
         AOS.init({
             duration: 1000, 
-            once: true, // Only animate once
+            once: true, 
             easing: 'ease-in-out'
         });
 
         // 3. Typed.js Initialization (Dynamic hero text)
         var typed = new Typed('.typed-text-output', {
             strings: [
-                "Security", 
-                "Speed", 
-                "The Future", 
+                "Digital Memories", 
+                "Private Content", 
+                "Secured Photos", 
                 "Akshu Cloud"
             ],
             typeSpeed: 80,
             backSpeed: 50,
             loop: true,
             showCursor: true,
-            cursorChar: '|',
+            cursorChar: '_',
         });
     </script>
 </body>
