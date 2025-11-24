@@ -1,11 +1,17 @@
-/* login.css: ULTIMATE NEON DARK THEME STYLES for Forms */
+/* login.css: ULTIMATE NEON DARK THEME STYLES for Forms (UPDATED) */
 
 /* --- COLOR REFERENCES (from style.css) --- */
 /* --color-accent: #03DAC6; (Neon Aqua) */
 /* --color-dark-card: #1e1e1e; */
 /* --color-dark-surface: #121212; */
 /* --color-light-text: #E0E0E0; */
+/* --color-secondary-accent-light: #BB86FC; (Purple) */
 /* ------------------------------------------- */
+
+/* GLOBAL: Smoother transitions for everything */
+* {
+    transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, color 0.4s ease, transform 0.3s ease;
+}
 
 /* 1. Login Section Layout */
 .login-section {
@@ -13,68 +19,92 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Adjust padding to compensate for the fixed, larger navbar on scroll */
-    padding-top: 100px; 
-    padding-bottom: 50px;
-    background: linear-gradient(180deg, #121212 0%, #1a1a1a 100%); /* Subtle background gradient */
+    padding: 120px 20px 50px 20px; /* Top padding increased for fixed navbar, added horizontal padding */
+    background: linear-gradient(180deg, #0d0d0d 0%, #151515 100%); /* Deeper, subtle background gradient */
+    overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 /* 2. Login Card (Premium Neon Translucent) */
 .login-card {
     width: 100%;
-    max-width: 450px; /* Slightly wider for better visual balance */
-    padding: 50px;
-    border-radius: 20px;
-    background: rgba(30, 30, 30, 0.9); /* Opaque dark background */
+    max-width: 420px; /* Slightly narrower for a sleeker look */
+    padding: 40px;
+    border-radius: 25px; /* Softer rounded corners */
+    background: rgba(30, 30, 30, 0.95); /* More opaque dark background */
     
-    /* Neon Border and Glow */
-    border: 1px solid rgba(3, 218, 198, 0.3); /* Subtle neon border */
-    box-shadow: 0 0 25px rgba(3, 218, 198, 0.2), 0 10px 40px rgba(0, 0, 0, 0.8); /* Deep shadow with neon glow */
-    transition: all 0.5s ease;
+    /* Neon Border and Deeper Glow */
+    border: 2px solid rgba(3, 218, 198, 0.4); /* Thicker, noticeable neon border */
+    box-shadow: 
+        0 0 35px rgba(3, 218, 198, 0.3), /* Wider Neon Glow */
+        0 20px 50px rgba(0, 0, 0, 0.9); /* Very Deep shadow */
     
-    margin: auto;
+    /* Animation for smooth entry */
+    animation: fadeIn 0.8s ease-out;
+}
+
+/* Keyframe for Card Entry */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Hover Effect for Premium feel */
 .login-card:hover {
-    box-shadow: 0 0 35px rgba(3, 218, 198, 0.4), 0 15px 50px rgba(0, 0, 0, 0.9);
+    transform: translateY(-5px); /* Subtle lift on hover */
+    box-shadow: 
+        0 0 45px rgba(3, 218, 198, 0.5), 
+        0 25px 60px rgba(0, 0, 0, 1.0); /* Stronger glow and deeper shadow */
 }
 
 
 /* Light Theme Adjustments for the Card */
 body.light .login-card {
     background: #ffffff;
-    border: 1px solid #ddd;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid #c9c9c9;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+}
+body.light .login-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
+
 .login-card h2 {
+    font-family: 'Montserrat', sans-serif;
     text-align: center;
     margin-bottom: 30px;
-    /* Use Neon Accent */
+    /* Use Neon Accent - Richer Glow */
     color: #03DAC6; 
-    font-weight: 800;
-    text-shadow: 0 0 5px rgba(3, 218, 198, 0.5);
+    font-weight: 900;
+    font-size: 2.2rem;
+    text-shadow: 0 0 8px rgba(3, 218, 198, 0.8), 0 0 15px rgba(3, 218, 198, 0.5);
+    transform: perspective(1px) translateZ(0); /* For smooth glow transition */
 }
 body.light .login-card h2 {
     color: #1e2738;
     text-shadow: none;
+    font-weight: 800;
 }
 
 /* 3. Input Styles (Bootstrap .form-control enhancement) */
-/* This style ensures that the form-control gets the premium dark look and neon focus effect. */
 .form-control {
-    background: #242424 !important; /* Darker input background */
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: #1f1f1f !important; /* Darker input background */
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     color: #E0E0E0 !important;
-    transition: all 0.3s ease;
-    height: 48px; /* Standardized height */
+    height: 52px; /* Taller, modern height */
+    padding-left: 15px;
+    border-radius: 12px; /* Slightly more rounded */
+}
+
+.form-control::placeholder {
+    color: #777;
+    font-style: italic;
 }
 
 .form-control:focus {
-    background: #2a2a2a !important;
+    background: #282828 !important;
     border-color: #03DAC6 !important; /* Neon focus border */
-    box-shadow: 0 0 0 0.25rem rgba(3, 218, 198, 0.3) !important; /* Neon glow focus */
+    box-shadow: 0 0 0 0.25rem rgba(3, 218, 198, 0.4) !important; /* Stronger Neon glow focus */
 }
 
 body.light .form-control {
@@ -84,68 +114,97 @@ body.light .form-control {
 }
 
 body.light .form-control:focus {
+    background: #fff !important;
     border-color: #BB86FC !important; /* Light theme secondary accent (Purple) */
-    box-shadow: 0 0 0 0.25rem rgba(187, 134, 252, 0.3) !important;
+    box-shadow: 0 0 0 0.25rem rgba(187, 134, 252, 0.4) !important;
 }
 
-/* 4. Input Group Text (Icons) */
+/* 4. Input Group Text (Icons) - Integrated sleekly */
 .input-group-text {
     background: #121212;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: #03DAC6; /* Neon icon color */
+    border-radius: 12px 0 0 12px; /* Match form-control curve */
     border-right: none;
+    padding: 0.75rem 1rem;
 }
+.input-group-text + .form-control {
+    border-radius: 0 12px 12px 0 !important;
+}
+
 body.light .input-group-text {
-    background: #E8E8E8;
+    background: #EFEFEF;
     border-color: #ddd;
     color: #1e2738;
 }
 
-
 /* 5. Login/Register Button (Neon CTA) */
 .login-btn {
     width: 100%;
-    height: 50px;
+    height: 55px; /* Taller button */
     background: #03DAC6; /* Neon base color */
     border: none;
-    border-radius: 50px;
-    color: #121212; /* Dark text for contrast */
-    font-size: 1.1rem;
+    border-radius: 15px; /* Modern rectangular-round */
+    color: #0d0d0d; /* Dark text for contrast */
+    font-size: 1.2rem;
     font-weight: 700;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    margin-top: 25px;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    margin-top: 30px;
     
-    /* Initial Neon Glow */
-    box-shadow: 0 5px 25px rgba(3, 218, 198, 0.5); 
+    /* Initial Neon Glow - Smoother */
+    box-shadow: 0 8px 30px rgba(3, 218, 198, 0.6); 
+    /* Use transform for hardware acceleration */
+    transform: perspective(1px) translateZ(0); 
 }
 
 .login-btn:hover {
-    background: #03dac6e6;
-    box-shadow: 0 10px 40px rgba(3, 218, 198, 0.9); /* Stronger glow on hover */
-    transform: translateY(-3px); /* Smooth lift */
+    background: #03d6c1; /* Slight color shift */
+    box-shadow: 0 15px 50px rgba(3, 218, 198, 1.0); /* Intense glow on hover */
+    transform: translateY(-5px) scale(1.02); /* Smooth lift and subtle grow */
 }
 
 .login-btn:active {
-    transform: translateY(1px); /* Press-down effect */
-    box-shadow: 0 3px 10px rgba(3, 218, 198, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.8); 
+    transform: translateY(1px) scale(0.99); /* Press-down effect */
+    box-shadow: 0 3px 15px rgba(3, 218, 198, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.5); 
 }
 
 body.light .login-btn {
     background: #BB86FC; /* Light theme secondary accent (Purple) */
     color: #000;
-    box-shadow: 0 5px 25px rgba(187, 134, 252, 0.5);
+    box-shadow: 0 8px 30px rgba(187, 134, 252, 0.6);
 }
 
 body.light .login-btn:hover {
-    background: #bb86fcc9;
-    box-shadow: 0 10px 40px rgba(187, 134, 252, 0.8);
+    background: #aa7ef8;
+    box-shadow: 0 15px 50px rgba(187, 134, 252, 1.0);
 }
 
-/* Helper Text */
+/* Helper Text (For Password Hints/Links) */
 .text-muted.small {
-    color: rgba(3, 218, 198, 0.7) !important;
-    text-shadow: 0 0 2px rgba(3, 218, 198, 0.3);
+    color: rgba(3, 218, 198, 0.8) !important;
+    text-shadow: 0 0 3px rgba(3, 218, 198, 0.4);
+    font-style: italic;
+    font-size: 0.85rem !important;
+}
+
+a.text-muted-text {
+    color: #E0E0E0 !important;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+a.text-muted-text:hover {
+    color: #03DAC6 !important;
+    text-decoration: underline;
+}
+
+body.light a.text-muted-text {
+    color: #555 !important;
+}
+body.light a.text-muted-text:hover {
+    color: #BB86FC !important;
 }
 
 /* 6. Theme Toggle */
@@ -153,24 +212,25 @@ body.light .login-btn:hover {
     text-align: center;
     margin-top: 30px;
     border-top: 1px solid rgba(255,255,255,0.1);
-    padding-top: 15px;
+    padding-top: 20px;
 }
 
 .toggle-theme-btn {
     background: transparent;
-    border: 1px solid #03DAC6;
+    border: 2px solid #03DAC6;
     color: #03DAC6;
-    padding: 8px 20px;
-    border-radius: 50px;
+    padding: 10px 25px;
+    border-radius: 30px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .toggle-theme-btn:hover {
     background: #03DAC6;
     color: #121212;
-    box-shadow: 0 0 10px rgba(3, 218, 198, 0.5);
+    box-shadow: 0 0 15px rgba(3, 218, 198, 0.8);
 }
 
 body.light .toggle-theme-btn {
@@ -181,14 +241,30 @@ body.light .toggle-theme-btn {
 body.light .toggle-theme-btn:hover {
     background: #1e2738;
     color: white;
+    box-shadow: 0 0 10px rgba(30, 39, 56, 0.5);
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 450px) {
+/* 7. Mobile Responsiveness (Better for all smaller devices) */
+@media (max-width: 576px) {
     .login-card {
-        padding: 30px 20px; 
+        max-width: 100%;
+        padding: 30px 25px; 
+        border-radius: 15px; /* Less rounded for small screens */
     }
     .login-card h2 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
+        margin-bottom: 20px;
+    }
+    .login-section {
+        padding: 100px 10px 30px 10px;
+    }
+    .login-btn {
+        height: 50px;
+        font-size: 1.1rem;
+        margin-top: 25px;
+    }
+    .text-muted.small {
+        margin-top: -5px !important; /* Move hint closer to password field */
+        margin-bottom: 20px !important;
     }
 }
