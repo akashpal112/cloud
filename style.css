@@ -5,19 +5,24 @@
 -----------------------------------*/
 :root {
     /* Modern Dark Theme Color Palette: Neon/Aqua Accent */
-    --color-dark-surface: #3c3b3b;      /* Deeper Primary dark background */
-    --color-dark-card: #181818;         /* Slightly lighter surface for cards/sections */
+    --color-dark-surface: #121212;      /* Deeper Primary dark background (More modern) */
+    --color-dark-card: #1E1E1E;         /* Slightly lighter surface for cards/sections */
     --color-accent: #03DAC6;            /* Vibrant Teal/Aqua for main highlights (Attractive Neon Look) */
     --color-secondary-accent: #BB86FC;  /* Purple for secondary elements */
-    --color-light-text: #F0F0F0;        /* Soft white text for high readability */
-    --color-muted-text: #A0A0A0;        /* Muted text for description/subheadings */
+    --color-light-text: #E0E0E0;        /* Soft white text for high readability */
+    --color-muted-text: #909090;        /* Muted text for description/subheadings */
     
     /* Shadow & Glow Effects */
-    --shadow-deep: 0 8px 20px rgba(0, 0, 0, 0.9); /* Deeper shadow for 3D effect */
-    --shadow-neon: 0 0 15px rgba(3, 218, 198, 0.7), 0 0 30px rgba(3, 218, 198, 0.4); /* Stronger neon glow */
+    --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.95); /* Deeper shadow for 3D effect */
+    --shadow-neon: 0 0 18px rgba(3, 218, 198, 0.7), 0 0 35px rgba(3, 218, 198, 0.4); /* Stronger neon glow */
     
     /* Smooth Transition for hover effects */
     --transition-smooth: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* GLOBAL RESET FOR BETTER MOBILE LAYOUT */
+* {
+    box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height. */
 }
 
 /* Light Theme Variables (For future use or theme toggle) */
@@ -79,7 +84,7 @@ a:hover {
 
 .navbar.scrolled {
     /* Frosted Glass Effect */
-    background-color: rgba(101, 92, 92, 0.9); 
+    background-color: rgba(30, 30, 30, 0.9); /* Use dark card color for better integration */
     backdrop-filter: blur(12px);
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.8), var(--shadow-neon);
     border-bottom: 1px solid rgba(3, 218, 198, 0.3);
@@ -159,7 +164,7 @@ a:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(10, 10, 10, 0.9); /* Deep dark overlay */
+    background: rgba(10, 10, 10, 0.95); /* Deeper dark overlay */
 }
 
 .hero-content {
@@ -171,6 +176,7 @@ a:hover {
     font-weight: 900;
     color: var(--color-light-text);
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    line-height: 1.2; /* Improved readability for large mobile text */
 }
 .hero-content h1 .typed-text-output {
     /* Style for the dynamic typing part */
@@ -181,6 +187,7 @@ a:hover {
 .hero-content h2 {
     font-size: 1.5rem;
     font-weight: 400;
+    color: var(--color-muted-text); /* Use muted text color for subheading */
 }
 
 /* Hero CTA Button (Accent Filled) */
@@ -191,7 +198,7 @@ a:hover {
     padding: 18px 45px;
     font-size: 1.3rem;
     font-weight: 700;
-    color: var(--color-dark-surface); /* Dark text for contrast */
+    color: var(--color-dark-surface) !important; /* Dark text for contrast */
     text-decoration: none;
     transition: var(--transition-smooth);
     box-shadow: var(--shadow-neon);
@@ -208,7 +215,7 @@ a:hover {
    SECTIONS & TYPOGRAPHY
 -----------------------------------*/
 section {
-    padding: 80px 0;
+    padding: 100px 0; /* Increased vertical padding for bigger sections */
 }
 
 .section-heading {
@@ -221,6 +228,9 @@ section {
 .section-subheading {
     font-size: 1.2rem;
     color: var(--color-muted-text);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* ---------------------------------
@@ -271,7 +281,7 @@ section {
     line-height: 50px;
     border-radius: 50%;
     background: var(--color-accent);
-    color: var(--color-dark-surface);
+    color: var(--color-dark-card); /* Changed to dark card for better contrast */
     font-weight: 700;
     font-size: 1.5rem;
     margin: 0 auto 20px;
@@ -395,6 +405,7 @@ section {
     color: var(--color-muted-text);
     margin-right: 20px;
     font-size: 1.5rem;
+    transition: var(--transition-smooth);
 }
 
 .social-icons a:hover {
@@ -414,6 +425,12 @@ section {
 /* ---------------------------------
    RESPONSIVENESS (SMOOTH on all devices)
 -----------------------------------*/
+@media (max-width: 1200px) {
+    section {
+        padding: 80px 0;
+    }
+}
+
 @media (max-width: 992px) {
     .hero-content h1 {
         font-size: 4rem;
@@ -426,6 +443,7 @@ section {
 @media (max-width: 768px) {
     .hero-section {
         height: 85vh; 
+        padding-top: 60px; /* Adjusted padding for smaller screens */
     }
     .hero-content h1 {
         font-size: 3rem;
@@ -448,7 +466,7 @@ section {
         text-align: left;
     }
     .text-secondary-accent-glow {
-        font-size: 6rem !important;
+        font-size: 8rem !important; /* Increased for better visual impact on tablet */
     }
     .footer-section .col-md-4 {
         margin-bottom: 30px;
@@ -456,5 +474,33 @@ section {
     .social-icons {
         text-align: center;
         margin-top: 15px;
+    }
+    /* Mobile Navbar adjustment */
+    .navbar.scrolled {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        border-bottom: none;
+    }
+}
+
+/* Extra small devices (less than 576px - true mobile) */
+@media (max-width: 576px) {
+    .hero-content h1 {
+        font-size: 2.5rem; /* Ensure headline fits on small mobile screens */
+    }
+    .btn-hero-cta {
+        width: 100%;
+        max-width: 300px; /* Constraint width for a better feel */
+    }
+    .section-heading {
+        font-size: 2rem;
+    }
+    .feature-card {
+        padding: 30px 20px;
+    }
+    .security-content {
+        padding: 20px;
+    }
+    .text-secondary-accent-glow {
+        font-size: 6rem !important;
     }
 }
