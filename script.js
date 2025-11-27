@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------
-   script.js - Akshu Cloud Gallery Frontend Logic (Multi-Upload & Contacts)
+   script.js - Akshu Cloud Gallery Frontend Logic (Updated with Gaming Hub)
 ----------------------------------------------------------------------*/
 const SERVER_URL = ''; // Empty means same domain (e.g., http://127.0.0.1:5000)
 const LOGIN_TOKEN = 'isLoggedIn'; 
@@ -7,12 +7,13 @@ let galleryItems = []; // To hold the photo data for the current user
 let currentIndex = 0; // For lightbox navigation
 let stream = null; // Global variable to hold the video stream
 
-// --- 1. AUTHENTICATION HANDLERS (UNCHANGED) ---
-
-// ... (handleRegister, handleLogin, logout functions remain the same)
+// ----------------------------------------------------------------------
+// --- 1. AUTHENTICATION HANDLERS ---
+// ----------------------------------------------------------------------
 
 async function handleRegister(event) {
     event.preventDefault();
+    // Assuming registerUsername and registerPassword are the core fields for backend
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
     const messageElement = document.getElementById('registerMessage');
@@ -29,10 +30,12 @@ async function handleRegister(event) {
         const data = await response.json();
         
         if (data.success) {
-            // Updated: Redirect to login.html after successful registration
+            // Redirect to login.html after successful registration
             messageElement.style.color = '#03DAC6';
             messageElement.textContent = data.message;
-            setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+            // Get full name if available to pass to thankyou page
+            const fullName = document.getElementById('registerName') ? document.getElementById('registerName').value : username;
+            setTimeout(() => { window.location.href = `thankyou.html?name=${encodeURIComponent(fullName)}`; }, 1000);
         } else {
             messageElement.style.color = '#FF6B6B';
             messageElement.textContent = data.message;
@@ -88,7 +91,9 @@ async function logout() {
     }
 }
 
-// --- 2. PHOTO UPLOAD HANDLERS (UPDATED for metadata) ---
+// ----------------------------------------------------------------------
+// --- 2. PHOTO UPLOAD HANDLERS ---
+// ----------------------------------------------------------------------
 
 async function uploadSingleFile(file, locationData = '') {
     const formData = new FormData();
@@ -138,7 +143,6 @@ async function handleMultipleUpload(event) {
             <br>Success: ${successfulUploads} | Failed: ${failedUploads}
         `;
         
-        // Pass empty location for file uploads, assuming location is embedded in file exif or user skips live capture
         const success = await uploadSingleFile(file, ''); 
         
         if (success) {
@@ -153,22 +157,20 @@ async function handleMultipleUpload(event) {
     uploadMessageElement.innerHTML = `<span class='animate__animated animate__pulse'>${finalMessage}</span>`;
     uploadMessageElement.style.color = failedUploads === 0 ? '#03DAC6' : 'orange';
 
-    // Reload gallery to show newly uploaded photos
     await fetchGalleryImages(); 
-
-    // Reset the input field
     event.target.value = '';
 }
 
 
-// --- 3. GALLERY MANAGEMENT (UPDATED for metadata display) ---
+// ----------------------------------------------------------------------
+// --- 3. GALLERY MANAGEMENT ---
+// ----------------------------------------------------------------------
 
 async function fetchGalleryImages() {
     const galleryDiv = document.getElementById('gallery');
     const imageCountSpan = document.getElementById('imageCount');
-    const contactCountFooterSpan = document.getElementById('contactCountFooter'); // Already in place
+    const contactCountFooterSpan = document.getElementById('contactCountFooter'); 
     
-    // Show loading spinner ONLY in the gallery area
     if (galleryDiv) { 
         galleryDiv.innerHTML = `
             <div class="text-center p-5 animate__animated animate__fadeIn">
@@ -188,9 +190,8 @@ async function fetchGalleryImages() {
         
         if (imageCountSpan) imageCountSpan.textContent = galleryItems.length;
         if (contactCountFooterSpan) {
-            // Update total count after fetching images
             const currentContactCount = parseInt(document.getElementById('contactCount').textContent || 0);
-            contactCountFooterSpan.textContent = currentContactCount; // Re-sync or just keep existing count
+            contactCountFooterSpan.textContent = currentContactCount; 
         }
         
 
@@ -209,7 +210,6 @@ async function fetchGalleryImages() {
                     card.className = 'gallery-card animate__animated animate__zoomIn';
                     card.setAttribute('data-index', index);
                     
-                    // Metadata for card hover
                     const locationText = photo.location !== 'N/A' ? photo.location.split(',')[0] + '...' : 'Unknown Location';
 
                     card.innerHTML = `
@@ -253,7 +253,6 @@ async function deletePhoto(photoId, publicId) {
     try {
         const response = await fetch(`${SERVER_URL}/api/photos/${photoId}`, {
             method: 'DELETE',
-            // headers: { 'Content-ID': publicId } // Not needed, public_id is only used server side for cloudinary deletion
         });
         
         const data = await response.json();
@@ -276,7 +275,9 @@ async function deletePhoto(photoId, publicId) {
 }
 
 
-// --- 4. LIGHTBOX HANDLERS (UPDATED for metadata display) ---
+// ----------------------------------------------------------------------
+// --- 4. LIGHTBOX HANDLERS ---
+// ----------------------------------------------------------------------
 
 function openLightbox(index) {
     if (galleryItems.length === 0) return;
@@ -329,10 +330,9 @@ function navigateLightbox(direction) {
 
 
 // ----------------------------------------------------------------------
-// --- 5. PRIVATE CONTACTS HANDLERS (UNCHANGED) ---
+// --- 5. PRIVATE CONTACTS HANDLERS ---
 // ----------------------------------------------------------------------
 
-// ... (fetchContacts, handleAddContact, deleteContact, handleVcfUpload functions remain the same)
 async function fetchContacts() {
     const contactsListDiv = document.getElementById('contactsList');
     const contactCountSpan = document.getElementById('contactCount');
@@ -490,9 +490,8 @@ async function handleVcfUpload(event) {
         vcfUploadMessage.textContent = data.message;
         
         if (data.success) {
-            // Refresh contacts list after successful upload
             fetchContacts();
-            vcfFileInput.value = ''; // Clear file input
+            vcfFileInput.value = ''; 
         }
 
     } catch (error) {
@@ -503,7 +502,7 @@ async function handleVcfUpload(event) {
 }
 
 // ----------------------------------------------------------------------
-// --- 6. LIVE CAPTURE & GEOLOCATION HANDLERS (NEW) ---
+// --- 6. LIVE CAPTURE & GEOLOCATION HANDLERS ---
 // ----------------------------------------------------------------------
 
 const videoElement = document.getElementById('videoElement');
@@ -517,7 +516,6 @@ const captureTimestamp = document.getElementById('captureTimestamp');
 const capturedLocationInput = document.getElementById('capturedLocationInput');
 
 
-// Geolocation Fetcher
 function getGeolocation() {
     liveCaptureMessage.textContent = 'Fetching location...';
     liveCaptureMessage.style.color = 'yellow';
@@ -547,15 +545,12 @@ function getGeolocation() {
         liveCaptureMessage.style.color = 'orange';
     }
     
-    // Set immediate timestamp
     captureTimestamp.textContent = new Date().toLocaleTimeString();
 }
 
-// Start Camera Stream
 async function startCamera() {
     getGeolocation();
     
-    // Reset UI state
     videoElement.style.display = 'block';
     canvasElement.style.display = 'none';
     captureButton.style.display = 'block';
@@ -581,14 +576,12 @@ async function startCamera() {
     }
 }
 
-// Stop Camera Stream
 function stopCamera() {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
     }
 }
 
-// Capture Photo
 function capturePhoto() {
     if (!stream) return;
     
@@ -597,12 +590,10 @@ function capturePhoto() {
     canvasElement.height = videoElement.videoHeight;
     context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
 
-    // Stop video stream and hide video element
     stopCamera();
     videoElement.style.display = 'none';
     canvasElement.style.display = 'block';
 
-    // Update buttons
     captureButton.style.display = 'none';
     uploadCaptureButton.style.display = 'block';
     retakeCaptureButton.style.display = 'block';
@@ -610,23 +601,19 @@ function capturePhoto() {
     liveCaptureMessage.style.color = '#BB86FC';
 }
 
-// Upload Captured Photo
 async function uploadCapturedPhoto() {
     liveCaptureMessage.textContent = 'Uploading captured photo...';
     liveCaptureMessage.style.color = 'yellow';
     
-    // Get image data from canvas
     canvasElement.toBlob(async (blob) => {
         const capturedFile = new File([blob], "captured_photo.jpeg", { type: "image/jpeg" });
         const locationData = capturedLocationInput.value;
         
-        // Use the general upload function
         const success = await uploadSingleFile(capturedFile, locationData === 'N/A' ? '' : locationData);
 
         if (success) {
             liveCaptureMessage.textContent = 'Photo uploaded successfully!';
             liveCaptureMessage.style.color = '#03DAC6';
-            // Hide modal and refresh gallery after a short delay
             setTimeout(() => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('liveCaptureModal'));
                 if(modal) modal.hide();
@@ -639,8 +626,80 @@ async function uploadCapturedPhoto() {
     }, 'image/jpeg', 0.9);
 }
 
+// ----------------------------------------------------------------------
+// --- 7. WALLET & GAMING HUB LOGIC (NEW) ---
+// ----------------------------------------------------------------------
 
-// --- 7. INITIALIZATION (UPDATED with modal events) ---
+// Function to fetch and update user's wallet balance on the UI
+async function fetchWalletBalance() {
+    const balanceElements = document.querySelectorAll('#walletBalance, #currentBalance');
+    if (balanceElements.length === 0) return; 
+    
+    balanceElements.forEach(el => el.textContent = '...'); 
+
+    try {
+        const response = await fetch(`${SERVER_URL}/api/wallet/balance`);
+        const data = await response.json();
+
+        if (data.success) {
+            balanceElements.forEach(el => el.textContent = data.balance.toLocaleString());
+            return data.balance;
+        } else {
+            console.error("Failed to fetch balance:", data.message);
+            balanceElements.forEach(el => el.textContent = 'Error');
+            return 0;
+        }
+    } catch (error) {
+        console.error("Network error fetching balance:", error);
+        balanceElements.forEach(el => el.textContent = 'Offline');
+        return 0;
+    }
+}
+
+// Function to handle placing the color prediction bet
+async function placeColorBet(prediction) {
+    const betAmountInput = document.getElementById('betAmount');
+    const gameMessage = document.getElementById('gameMessage');
+    const amount = parseInt(betAmountInput.value);
+    
+    if (isNaN(amount) || amount < 10) {
+        gameMessage.textContent = 'Bet amount must be at least 10 tokens.';
+        gameMessage.style.color = '#FF6B6B';
+        return;
+    }
+    
+    gameMessage.textContent = `Placing bet of ${amount} tokens on ${prediction}...`;
+    gameMessage.style.color = 'yellow';
+    
+    try {
+        const response = await fetch(`${SERVER_URL}/api/game/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prediction, amount })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            gameMessage.textContent = `✅ Bet successful! Your new balance is ${data.new_balance.toLocaleString()} Tokens.`;
+            gameMessage.style.color = '#03DAC6';
+            fetchWalletBalance(); 
+            betAmountInput.value = '10'; 
+        } else {
+            gameMessage.textContent = `❌ Bet Failed: ${data.message}`;
+            gameMessage.style.color = '#FF6B6B';
+        }
+
+    } catch (error) {
+        console.error("Bet placement network error:", error);
+        gameMessage.textContent = 'Server Error. Could not place bet.';
+        gameMessage.style.color = '#FF6B6B';
+    }
+}
+
+
+// ----------------------------------------------------------------------
+// --- 8. INITIALIZATION ---
+// ----------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -655,13 +714,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (logoutButton) logoutButton.addEventListener('click', logout);
 
 
-    // Gallery Initialization
-    if (document.body.classList.contains('gallery-page')) {
+    // Gallery & Gaming Initialization
+    const isGalleryPage = document.body.classList.contains('gallery-page');
+    const isGamingPage = document.body.classList.contains('gaming-page');
+    
+    if (isGalleryPage || isGamingPage) {
         const statusResponse = await fetch(`${SERVER_URL}/api/status`);
         const statusData = await statusResponse.json();
         
         const loginPrompt = document.getElementById("loginPrompt");
-        const gallerySection = document.getElementById("gallerySection");
+        const mainSection = document.getElementById("gallerySection") || document.querySelector('.main-gaming-content');
         const usernameDisplay = document.getElementById("usernameDisplay");
         
         if (usernameDisplay) {
@@ -670,40 +732,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (statusData.isLoggedIn) {
             if (loginPrompt) loginPrompt.style.display = "none";
-            if (gallerySection) gallerySection.style.display = "block";
+            if (mainSection) mainSection.style.display = "block";
             
-            // Load Gallery and Contacts
-            fetchGalleryImages(); 
-            fetchContacts();
+            // ⭐ Load Wallet Balance on ALL secured pages
+            fetchWalletBalance(); 
 
-            // Attach Upload Listener 
-            const uploadInput = document.getElementById('uploadInput');
-            if(uploadInput) uploadInput.addEventListener('change', handleMultipleUpload);
-            
-            // Attach Contact Form Listener
-            const addContactForm = document.getElementById('addContactForm');
-            if(addContactForm) addContactForm.addEventListener('submit', handleAddContact);
-            
-            // Attach VCF Upload Listener
-            const vcfUploadForm = document.getElementById('vcfUploadForm');
-            if(vcfUploadForm) vcfUploadForm.addEventListener('submit', handleVcfUpload);
+            if (isGalleryPage) {
+                // Load Gallery and Contacts
+                fetchGalleryImages(); 
+                fetchContacts();
 
-            // Attach Live Capture Listeners (NEW)
-            if(captureButton) captureButton.addEventListener('click', capturePhoto);
-            if(uploadCaptureButton) uploadCaptureButton.addEventListener('click', uploadCapturedPhoto);
-            if(retakeCaptureButton) retakeCaptureButton.addEventListener('click', startCamera);
+                // Attach Upload Listener 
+                const uploadInput = document.getElementById('uploadInput');
+                if(uploadInput) uploadInput.addEventListener('change', handleMultipleUpload);
+                
+                // Attach Contact Form Listener
+                const addContactForm = document.getElementById('addContactForm');
+                if(addContactForm) addContactForm.addEventListener('submit', handleAddContact);
+                
+                // Attach VCF Upload Listener
+                const vcfUploadForm = document.getElementById('vcfUploadForm');
+                if(vcfUploadForm) vcfUploadForm.addEventListener('submit', handleVcfUpload);
+
+                // Attach Live Capture Listeners
+                if(captureButton) captureButton.addEventListener('click', capturePhoto);
+                if(uploadCaptureButton) uploadCaptureButton.addEventListener('click', uploadCapturedPhoto);
+                if(retakeCaptureButton) retakeCaptureButton.addEventListener('click', startCamera);
+                
+                const liveCaptureModal = document.getElementById('liveCaptureModal');
+                if(liveCaptureModal) {
+                    liveCaptureModal.addEventListener('shown.bs.modal', startCamera);
+                    liveCaptureModal.addEventListener('hidden.bs.modal', stopCamera);
+                }
+            }
             
-            const liveCaptureModal = document.getElementById('liveCaptureModal');
-            if(liveCaptureModal) {
-                // Start camera when modal opens
-                liveCaptureModal.addEventListener('shown.bs.modal', startCamera);
-                // Stop camera when modal closes
-                liveCaptureModal.addEventListener('hidden.bs.modal', stopCamera);
+            if (isGamingPage) {
+                // ⭐ Attach Color Prediction Listeners
+                const predictButtons = document.querySelectorAll('.btn-predict');
+                predictButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const prediction = button.getAttribute('data-prediction');
+                        placeColorBet(prediction);
+                    });
+                });
             }
             
         } else {
             if (loginPrompt) loginPrompt.style.display = "block";
-            if (gallerySection) gallerySection.style.display = "none";
+            if (mainSection) mainSection.style.display = "none";
             localStorage.removeItem(LOGIN_TOKEN);
             localStorage.removeItem('username');
         }

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akshu Gaming Hub - Color Prediction</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"> 
+    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="login.css"> 
+    
+    <style>
+        /* Gaming Page Specific Styles */
+        body.gaming-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, var(--color-dark-surface) 0%, #05040F 100%);
+        }
+        .main-gaming-content {
+            flex-grow: 1;
+            padding-top: 100px;
+            padding-bottom: 50px;
+        }
+        .game-card-primary {
+            background: var(--color-dark-card);
+            border-radius: 20px;
+            box-shadow: var(--shadow-neon);
+            padding: 30px;
+            border: 1px solid rgba(187, 134, 252, 0.3);
+        }
+        .wallet-display {
+            background: rgba(187, 134, 252, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border-left: 5px solid var(--color-accent);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .color-selector button {
+            width: 100%;
+            height: 80px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-dark-surface);
+            transition: transform 0.2s;
+        }
+        .color-selector button:hover {
+            transform: scale(1.05);
+        }
+        #btnRed { background-color: #FF6B6B; }
+        #btnGreen { background-color: #03DAC6; }
+        #btnViolet { background-color: #BB86FC; }
+        
+        .result-box {
+            background: #28283E;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed var(--color-muted-text);
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body class="gaming-page">
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top scrolled">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-cloud-upload-alt me-2 text-accent"></i> Akshu Cloud Gallery
+            </a>
+            <div class="d-flex align-items-center">
+                <span class="navbar-text text-white-50 me-3">
+                    <i class="fas fa-coins text-accent me-2"></i> Balance: <span id="walletBalance" class="text-accent fw-bold">...</span> Tokens
+                </span>
+                <a class="btn btn-cta-outline btn-sm" href="gallery.html">
+                    <i class="fas fa-images me-1"></i> My Vault
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="main-gaming-content container">
+        <h1 class="text-center section-heading mb-5"><i class="fas fa-dice me-3 text-secondary-accent"></i> Akshu Color Predictor</h1>
+
+        <div class="row justify-content-center">
+            
+            <div class="col-lg-8">
+                <div class="game-card-primary">
+                    <div class="wallet-display mb-4 text-center">
+                        Your Current Balance: <span id="currentBalance" class="text-secondary-accent">0</span> Akshu Tokens
+                    </div>
+
+                    <h4 class="text-light-text mb-3"><i class="fas fa-palette me-2"></i> Select Your Color & Place Bet</h4>
+                    <p class="text-muted-text small">Winning Ratio: Red/Green (2X Bet), Violet (5X Bet)</p>
+                    
+                    <form id="predictionForm">
+                        <div class="mb-4">
+                            <label for="betAmount" class="form-label text-light-text">Bet Amount (Tokens)</label>
+                            <input type="number" class="form-control form-control-dark" id="betAmount" value="10" min="10" required>
+                        </div>
+                        
+                        <div class="row g-3 color-selector mb-4">
+                            <div class="col-4">
+                                <button type="button" id="btnRed" data-prediction="red" class="btn-predict">Red</button>
+                            </div>
+                            <div class="col-4">
+                                <button type="button" id="btnGreen" data-prediction="green" class="btn-predict">Green</button>
+                            </div>
+                            <div class="col-4">
+                                <button type="button" id="btnViolet" data-prediction="violet" class="btn-predict">Violet</button>
+                            </div>
+                        </div>
+                        
+                        <p id="gameMessage" class="text-center mt-3 fw-bold" style="min-height: 20px;">
+                            Click a color button above to place your bet.
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-8 mt-5">
+                <h4 class="text-light-text mb-3 text-center"><i class="fas fa-clock me-2"></i> Previous Results (Last 5)</h4>
+                <div class="result-box text-center text-light-text" id="previousResults">
+                    <p class="text-muted-text">Results will appear here after the first round finishes.</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="footer-section">
+        <div class="container text-center">
+            <div class="copyright">
+                <p>&copy; 2025 Akshu Cloud. All rights reserved. | Designed by Akash Gadriya</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script> 
+</body>
+</html>

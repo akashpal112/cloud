@@ -382,3 +382,115 @@ if __name__ == '__main__':
     print("-------------------------------------------------------")
     # In a production environment, use gunicorn or waitress
     app.run(host='0.0.0.0', port=5000)
+
+
+    # app.py - Akshu Cloud Gallery Backend (Snippets for NEW wallet/game features)
+
+# ... (Previous Imports)
+from datetime import datetime, timedelta
+# ... (Previous Initialization: app, Session, bcrypt, db, users_collection, photos_collection, contacts_collection)
+
+# New: Add 'wallets' and 'predictions' collections
+wallets_collection = db['wallets']
+predictions_collection = db['predictions']
+print("✅ New collections: Wallets and Predictions initialized.")
+
+# --- NEW UTILITY FUNCTION: Initialize Wallet on Login/Registration ---
+def initialize_wallet(user_id, initial_balance=1000):
+    """Checks if a user has a wallet. If not, creates one with an initial bonus."""
+    if wallets_collection.find_one({"user_id": user_id}) is None:
+        wallets_collection.insert_one({
+            "user_id": user_id,
+            "balance": initial_balance, # 1000 Free Akshu Tokens as bonus
+            "last_updated": datetime.now()
+        })
+        print(f"💰 Wallet created for user {user_id} with {initial_balance} tokens.")
+
+# --- Authentication routes updated to call initialize_wallet ---
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    # ... (Login logic)
+    if user and bcrypt.check_password_hash(user['password'], password):
+        session['user_id'] = str(user['_id'])
+        session['username'] = user['username']
+        
+        # ⭐ Call new wallet initialization function
+        initialize_wallet(session['user_id']) 
+        
+        return jsonify({"success": True, "message": "Login successful.", "username": user['username']})
+    # ... (Else block remains same)
+
+# ----------------------------------------------------------------------
+# --- NEW 6. WALLET & BALANCE API ---
+# ----------------------------------------------------------------------
+
+@app.route('/api/wallet/balance', methods=['GET'])
+@login_required
+def get_wallet_balance():
+    current_user_id = session['user_id']
+    
+    # Ensure wallet exists (should be guaranteed by login, but safe guard)
+    wallet = wallets_collection.find_one({"user_id": current_user_id})
+    
+    if not wallet:
+        # Should not happen if initialize_wallet is called correctly
+        initialize_wallet(current_user_id) 
+        wallet = wallets_collection.find_one({"user_id": current_user_id})
+
+    return jsonify({
+        "success": True, 
+        "balance": wallet.get('balance', 0)
+    })
+
+# ----------------------------------------------------------------------
+# --- NEW 7. COLOR PREDICTION GAME API ---
+# ----------------------------------------------------------------------
+
+@app.route('/api/game/predict', methods=['POST'])
+@login_required
+def place_prediction_bet():
+    data = request.get_json()
+    user_id = session['user_id']
+    prediction = data.get('prediction') # e.g., 'red', 'green', 'violet'
+    amount = data.get('amount')
+    
+    if not prediction or not amount or amount <= 0:
+        return jsonify({"success": False, "message": "Invalid prediction or amount."}), 400
+
+    wallet = wallets_collection.find_one({"user_id": user_id})
+    if wallet['balance'] < amount:
+        return jsonify({"success": False, "message": "Insufficient Akshu Tokens."}), 402
+
+    try:
+        # 1. Deduct Bet Amount (Transaction)
+        new_balance = wallet['balance'] - amount
+        wallets_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"balance": new_balance, "last_updated": datetime.now()}}
+        )
+
+        # 2. Record the Prediction/Bet
+        prediction_doc = {
+            "user_id": user_id,
+            "prediction": prediction,
+            "amount": amount,
+            "status": "pending", # Will be updated later by the result logic
+            "placed_at": datetime.now()
+        }
+        predictions_collection.insert_one(prediction_doc)
+
+        return jsonify({
+            "success": True, 
+            "message": f"Bet of {amount} tokens on {prediction} placed successfully.",
+            "new_balance": new_balance
+        })
+
+    except Exception as e:
+        print(f"❌ Prediction Error: {e}")
+        # Ideally, we would reverse the deduction here if an error occurred
+        return jsonify({"success": False, "message": "Failed to place bet due to server error."}), 500
+
+# Note: The logic for generating game results and distributing winnings is a complex topic 
+# that would require a separate scheduled task or a result API endpoint. We skip it here 
+# for the initial setup.

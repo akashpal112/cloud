@@ -5,7 +5,7 @@
 -----------------------------------*/
 :root {
     /* Premium VIOLET/PURPLE Dark Theme Palette */
-    --color-dark-surface: #100C1F;      /* Deepest Black-Violet Background */
+    --color-dark-surface: #292732;      /* Deepest Black-Violet Background */
     --color-dark-card: #1C172E;         /* Dark Card/Section Background */
     --color-accent: #BB86FC;            /* Main Purple/Violet Accent */
     --color-secondary-accent: #03DAC6;  /* Neon Cyan/Aqua for secondary highlights */
@@ -13,7 +13,7 @@
     --color-muted-text: #A0A0A9;        /* Muted text for description/subheadings */
     
     /* Shadow & Glow Effects */
-    --shadow-deep: 0 10px 40px rgba(0, 0, 0, 0.8); 
+    --shadow-deep: 0 10px 40px rgba(255, 238, 238, 0.8); 
     --shadow-neon: 0 0 20px rgba(187, 134, 252, 0.6); /* Vibrant purple glow */
     
     /* Smooth Transition for hover effects */
@@ -27,7 +27,7 @@
 
 body {
     /* Subtle vertical gradient for depth */
-    background: linear-gradient(180deg, var(--color-dark-surface) 0%, #05040F 100%);
+    background: linear-gradient(180deg, var(--color-dark-surface) 0%, #475164 100%);
     font-family: 'Poppins', sans-serif;
     color: var(--color-light-text);
     overflow-x: hidden;
@@ -80,10 +80,10 @@ a:hover {
 
 .navbar.scrolled {
     /* Frosted Glass Effect with Violet Tint */
-    background-color: rgba(16, 12, 31, 0.95); /* Deep Violet Dark for scroll */
+    background-color: rgba(167, 30, 167, 0.95); /* Deep Violet Dark for scroll */
     backdrop-filter: blur(8px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7); 
-    border-bottom: 1px solid rgba(187, 134, 252, 0.2);
+    box-shadow: 0 4px 15px rgba(137, 30, 30, 0.7); 
+    border-bottom: 1px solid rgba(109, 88, 13, 0.2);
 }
 
 .navbar-brand {
@@ -132,7 +132,7 @@ a:hover {
 .btn-cta-outline:hover {
     background-color: var(--color-accent) !important;
     color: var(--color-dark-surface) !important;
-    box-shadow: 0 0 15px rgba(187, 134, 252, 0.5);
+    box-shadow: 0 0 15px rgba(151, 129, 177, 0.5);
 }
 
 /* Hero CTA Button (Gradient) */
@@ -182,9 +182,9 @@ a:hover {
     justify-content: center;
     text-align: center;
     /* Keeping original space image for context, but overlay defines the feel */
-    background: url('https://images.unsplash.com/photo-1518640467707-6811f45facf1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') no-repeat center center/cover;
+    background: url('https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832_1280.jpg') no-repeat center center/cover;
     background-attachment: fixed;
-    color: white;
+    color: rgb(255, 247, 247);
     padding-top: 80px;
 }
 .hero-overlay {
@@ -194,7 +194,7 @@ a:hover {
     width: 100%;
     height: 100%;
     /* Deep, rich overlay to match theme */
-    background: rgba(16, 12, 31, 0.95); 
+    background: rgba(47, 41, 41, 0.95); 
 }
 .hero-content {
     z-index: 10;
