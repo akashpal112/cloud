@@ -5,4 +5,5 @@ pymongo
 python-dotenv
 cloudinary
 gunicorn
+razorpay
 vobject

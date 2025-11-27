@@ -1,4 +1,4 @@
-# app.py - Akshu Cloud Gallery Backend (Fully Merged and Updated with Game Logic)
+# app.py - Akshu Cloud Gallery Backend (Fully Merged and Updated with Game Logic & Razorpay)
 
 from flask import Flask, request, jsonify, session, send_from_directory
 from flask_bcrypt import Bcrypt
@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 from functools import wraps 
 import os
 from dotenv import load_dotenv
-import random # Imported for Game Result Logic
+import random 
+import razorpay # NEW: For payment gateway integration
 
 # Database and Cloudinary Imports
 from pymongo import MongoClient
@@ -29,6 +30,17 @@ bcrypt = Bcrypt(app)
 
 MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = os.getenv("DB_NAME")
+
+# Razorpay Configuration (Must be set in .env)
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+# Initialize Razorpay Client
+try:
+    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+    print("✅ Razorpay Client initialized.")
+except Exception as e:
+    print(f"⚠️ Razorpay Initialization Warning (Check keys): {e}")
+
 
 # Database connection
 try:
@@ -103,7 +115,6 @@ def register():
     
     return jsonify({"success": True, "message": "Registration successful! You can now log in."})
 
-# --- MERGED LOGIN FUNCTION ---
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -116,7 +127,6 @@ def login():
         session['user_id'] = str(user['_id'])
         session['username'] = user['username']
         
-        # Initialize wallet for new/existing user
         initialize_wallet(session['user_id']) 
         
         return jsonify({"success": True, "message": "Login successful.", "username": user['username']})
@@ -207,9 +217,7 @@ def delete_photo(photo_id):
         return jsonify({"success": False, "message": f"Deletion failed: {str(e)}"}), 500
 
 
-# ----------------------------------------------------------------------
-# --- 4. PRIVATE CONTACTS MANAGEMENT (VCF & CRUD) ---
-# ----------------------------------------------------------------------
+# --- 4. PRIVATE CONTACTS MANAGEMENT (CRUD) ---
 
 @app.route('/api/contacts', methods=['POST'])
 @login_required
@@ -377,7 +385,7 @@ def get_wallet_balance():
     })
 
 # ----------------------------------------------------------------------
-# --- 6. GAME RESULT LOGIC (NEW) ---
+# --- 6. GAME RESULT LOGIC ---
 # ----------------------------------------------------------------------
 
 def generate_game_result():
@@ -404,7 +412,6 @@ def generate_game_result():
 def process_round_winnings(round_id, winning_color):
     """Processes all pending bets for the given round and distributes winnings."""
     
-    # NOTE: Assuming all 'pending' bets were for the round just completed.
     pending_bets = predictions_collection.find({"status": "pending"}).limit(100) 
 
     total_winnings_distributed = 0
@@ -521,7 +528,7 @@ def place_prediction_bet():
 
 
 # ----------------------------------------------------------------------
-# --- 8. GAME STATUS API (NEW) ---
+# --- 8. GAME STATUS API ---
 # ----------------------------------------------------------------------
 
 @app.route('/api/game/status', methods=['GET'])
@@ -531,16 +538,13 @@ def get_game_status():
     
     round_duration = 60 # 60 seconds per round cycle (can be adjusted)
     
-    # 1. Get the latest round (for timer and current ID)
     latest_round = game_rounds_collection.find_one(sort=[('round_id', -1)])
     
-    # Calculate time remaining
     if latest_round:
         time_since_last_result = (datetime.now() - latest_round['result_time']).total_seconds()
         time_remaining = max(0, int(round_duration - time_since_last_result))
         current_round_id = latest_round['round_id'] + 1
     else:
-        # If no rounds exist, start timer from max and round ID from 1
         time_remaining = round_duration
         current_round_id = 1
 
@@ -561,7 +565,89 @@ def get_game_status():
 
 
 # ----------------------------------------------------------------------
-# --- 9. STATIC FILE ROUTES (PWA & SECURITY) ---
+# --- 9. RAZORPAY PAYMENT API: Create Order and Verify ---
+# ----------------------------------------------------------------------
+
+@app.route('/api/payment/create_order', methods=['POST'])
+@login_required
+def create_payment_order():
+    """Creates a Razorpay order for purchasing Akshu Tokens."""
+    
+    data = request.get_json()
+    amount_in_tokens = data.get('amount_tokens')
+    
+    if not amount_in_tokens or amount_in_tokens < 100:
+        return jsonify({"success": False, "message": "Minimum purchase is 100 tokens."}), 400
+    
+    # 1 Token = 1 INR (Amount in paise for Razorpay)
+    amount_in_paise = amount_in_tokens * 100
+    
+    order_data = {
+        'amount': amount_in_paise,
+        'currency': 'INR',
+        'receipt': f"receipt_{session['user_id']}_{datetime.now().timestamp()}",
+        'payment_capture': '1',
+        'notes': {
+            'user_id': session['user_id'],
+            'tokens': amount_in_tokens
+        }
+    }
+
+    try:
+        order = razorpay_client.order.create(data=order_data)
+        return jsonify({
+            "success": True,
+            "order_id": order['id'],
+            "amount": order['amount'],
+            "currency": order['currency'],
+            "key_id": RAZORPAY_KEY_ID 
+        })
+    except Exception as e:
+        print(f"❌ Razorpay Order Creation Error: {e}")
+        return jsonify({"success": False, "message": "Failed to create payment order."}), 500
+
+@app.route('/api/payment/verify', methods=['POST'])
+@login_required
+def verify_payment():
+    """Verifies the payment signature and credits the user's wallet with tokens."""
+    
+    data = request.get_json()
+    razorpay_payment_id = data.get('razorpay_payment_id')
+    razorpay_order_id = data.get('razorpay_order_id')
+    razorpay_signature = data.get('razorpay_signature')
+    
+    try:
+        # Verify the signature
+        razorpay_client.utility.verify_payment_signature({
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature': razorpay_signature
+        })
+        
+        # Fetch the order details to get the token amount
+        order = razorpay_client.order.fetch(razorpay_order_id)
+        tokens_to_credit = order['notes']['tokens'] 
+        
+        # CRUCIAL: Credit the user's wallet
+        wallets_collection.update_one(
+            {"user_id": session['user_id']},
+            {"$inc": {"balance": int(tokens_to_credit)},
+             "$set": {"last_updated": datetime.now()}}
+        )
+        
+        return jsonify({
+            "success": True, 
+            "message": f"Payment successful. {tokens_to_credit} tokens credited.",
+            "tokens_credited": tokens_to_credit
+        })
+        
+    except Exception as e:
+        print(f"❌ Razorpay Verification Failed: {e}")
+        return jsonify({"success": False, "message": "Payment verification failed or signature mismatch."}), 400
+
+
+# ----------------------------------------------------------------------
+# --- 10. STATIC FILE ROUTES (PWA & SECURITY) ---
 # ----------------------------------------------------------------------
 
 @app.route('/')
