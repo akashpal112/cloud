@@ -1,12 +1,13 @@
-# app.py - Akshu Cloud Gallery Backend (Multi-User Secured with Private Contacts)
+# app.py - Akshu Cloud Gallery Backend (Fully Merged and Updated with Gaming Hub)
 
 from flask import Flask, request, jsonify, session, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_session import Session
-from datetime import datetime
+from datetime import datetime, timedelta # Added timedelta for potential use
 from functools import wraps 
 import os
 from dotenv import load_dotenv
+import random # Added for Game Result Logic preparation
 
 # Database and Cloudinary Imports
 from pymongo import MongoClient
@@ -35,8 +36,12 @@ try:
     db = client[DB_NAME]
     users_collection = db['users']
     photos_collection = db['photos']
-    # NEW: Contacts Collection
     contacts_collection = db['contacts'] 
+    
+    # NEW: Game Collections
+    wallets_collection = db['wallets']
+    predictions_collection = db['predictions']
+    
     print("✅ MongoDB connection successful.")
 except Exception as e:
     print(f"❌ MongoDB connection error: {e}")
@@ -66,6 +71,17 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# --- NEW UTILITY FUNCTION: Initialize Wallet ---
+def initialize_wallet(user_id, initial_balance=1000):
+    """Checks if a user has a wallet. If not, creates one with an initial bonus."""
+    if wallets_collection.find_one({"user_id": user_id}) is None:
+        wallets_collection.insert_one({
+            "user_id": user_id,
+            "balance": initial_balance, # 1000 Free Akshu Tokens as bonus
+            "last_updated": datetime.now()
+        })
+        print(f"💰 Wallet created for user {user_id} with {initial_balance} tokens.")
+
 @app.route('/api/status', methods=['GET'])
 def get_status():
     is_logged_in = 'user_id' in session
@@ -82,11 +98,11 @@ def register():
         return jsonify({"success": False, "message": "Username already exists."})
     
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    # Note: We are only storing username and password for core login
     users_collection.insert_one({'username': username, 'password': hashed_password})
     
     return jsonify({"success": True, "message": "Registration successful! You can now log in."})
 
+# --- MERGED LOGIN FUNCTION ---
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -98,6 +114,10 @@ def login():
     if user and bcrypt.check_password_hash(user['password'], password):
         session['user_id'] = str(user['_id'])
         session['username'] = user['username']
+        
+        # ⭐ Initialize wallet for new/existing user
+        initialize_wallet(session['user_id']) 
+        
         return jsonify({"success": True, "message": "Login successful.", "username": user['username']})
     else:
         return jsonify({"success": False, "message": "Invalid username or password."})
@@ -109,7 +129,8 @@ def logout():
     return jsonify({"success": True, "message": "Logged out successfully."})
 
 
-# --- 3. PHOTO MANAGEMENT (UPDATED) ---
+# --- 3. PHOTO MANAGEMENT (CRUD) ---
+# (Routes for /api/upload, /api/photos, /api/photos/<photo_id> remain unchanged)
 
 @app.route('/api/upload', methods=['POST'])
 @login_required
@@ -122,11 +143,9 @@ def upload_photo():
     if file_to_upload.filename == '':
         return jsonify({"success": False, "message": "No selected file."}), 400
 
-    # Retrieve optional metadata from form data
-    location_data = request.form.get('location', '') # 'lat,lon'
+    location_data = request.form.get('location', '')
     
     try:
-        # Uploading to a folder named after the username for isolation
         upload_result = cloudinary.uploader.upload(file_to_upload, folder=session['username'])
         
         photo_data = {
@@ -134,8 +153,8 @@ def upload_photo():
             "url": upload_result['secure_url'],
             "public_id": upload_result['public_id'],
             "filename": file_to_upload.filename,
-            "uploaded_at": datetime.now(), # Server timestamp (reliable)
-            "location": location_data # New field for geolocation
+            "uploaded_at": datetime.now(),
+            "location": location_data
         }
         photos_collection.insert_one(photo_data)
         
@@ -149,12 +168,10 @@ def upload_photo():
 @login_required
 def get_photos():
     current_user_id = session['user_id']
-    # Security: Only retrieve photos linked to the current user_id
     user_photos = photos_collection.find({"user_id": current_user_id}).sort("uploaded_at", -1)
     
     photos_list = []
     for photo in user_photos:
-        # Include new metadata fields
         uploaded_at_str = photo.get('uploaded_at').strftime("%Y-%m-%d %H:%M:%S") if photo.get('uploaded_at') else 'N/A'
         
         photos_list.append({
@@ -173,7 +190,6 @@ def delete_photo(photo_id):
     current_user_id = session['user_id']
     
     try:
-        # Security: Find photo linked to photo_id AND current_user_id
         photo_doc = photos_collection.find_one({"_id": ObjectId(photo_id), "user_id": current_user_id})
         
         if not photo_doc:
@@ -181,10 +197,7 @@ def delete_photo(photo_id):
         
         public_id = photo_doc['public_id']
         
-        # 1. Delete from Cloudinary
         cloudinary.uploader.destroy(public_id)
-        
-        # 2. Delete from MongoDB
         photos_collection.delete_one({"_id": ObjectId(photo_id)})
         
         return jsonify({"success": True, "message": "Photo deleted successfully."})
@@ -196,7 +209,7 @@ def delete_photo(photo_id):
 
 # ----------------------------------------------------------------------
 # --- 4. PRIVATE CONTACTS MANAGEMENT (VCF & CRUD) ---
-# ----------------------------------------------------------------------
+# (Routes for /api/contacts, /api/import_vcf, /api/contacts/<contact_id> remain unchanged)
 
 @app.route('/api/contacts', methods=['POST'])
 @login_required
@@ -210,7 +223,7 @@ def add_contact():
         return jsonify({"success": False, "message": "Name and Phone are required."}), 400
 
     contact_data = {
-        "user_id": session.get('user_id'), # Link contact to the current logged-in user
+        "user_id": session.get('user_id'),
         "name": name,
         "phone": phone,
         "email": email,
@@ -224,7 +237,6 @@ def add_contact():
         print(f"❌ Error adding contact: {e}")
         return jsonify({"success": False, "message": "Failed to save contact."}), 500
         
-# VCF Contact Import Route
 @app.route('/api/import_vcf', methods=['POST'])
 @login_required
 def import_vcf():
@@ -242,7 +254,6 @@ def import_vcf():
         return jsonify({"success": False, "message": "Invalid file type. Please upload a .vcf file."}), 400
     
     try:
-        # Read the file content and decode it to a string for vobject parsing
         vcf_content = vcf_file.read().decode('utf-8') 
     except Exception as e:
         return jsonify({"success": False, "message": f"Could not read file content: {e}"}), 400
@@ -250,13 +261,11 @@ def import_vcf():
     contacts_imported = 0
 
     try:
-        # Parse VCF content (handles multiple contacts in one file)
         for vcard in vobject.readComponents(vcf_content): 
             name = ""
             phone = ""
             email = ""
 
-            # 1. Get Name (FN is Full Name, N is Structured Name)
             if hasattr(vcard, 'fn'):
                 name = str(vcard.fn.value)
             elif hasattr(vcard, 'n'):
@@ -266,20 +275,16 @@ def import_vcf():
             if not name:
                 name = "Unknown Contact (VCF Import)"
 
-
-            # 2. Get Phone Number (Prioritize 'CELL' or first available 'TEL')
             if hasattr(vcard, 'tel_list'):
                 for tel in vcard.tel_list:
                     phone = tel.value
                     if 'CELL' in tel.params.get('TYPE', []) or 'VOICE' in tel.params.get('TYPE', []):
                         break 
             
-            # 3. Get Email (First available 'EMAIL')
             if hasattr(vcard, 'email_list') and vcard.email_list:
                 email = vcard.email_list[0].value
                 
             
-            # Save the contact only if a phone number is found
             if phone:
                 contacts_collection.insert_one({
                     "user_id": current_user_id,
@@ -316,7 +321,6 @@ def get_contacts():
     current_user_id = session.get('user_id')
     
     try:
-        # Crucial security check: fetch only contacts belonging to the current user
         user_contacts = contacts_collection.find({"user_id": current_user_id}).sort("name", 1) 
         
         contacts_list = []
@@ -341,7 +345,6 @@ def delete_contact(contact_id):
     current_user_id = session.get('user_id')
     
     try:
-        # Security: Ensure the contact belongs to the user before deleting
         result = contacts_collection.delete_one({"_id": ObjectId(contact_id), "user_id": current_user_id})
         
         if result.deleted_count == 1:
@@ -354,75 +357,7 @@ def delete_contact(contact_id):
         return jsonify({"success": False, "message": "Failed to delete contact."}), 500
 
 # ----------------------------------------------------------------------
-# --- 5. STATIC FILE ROUTES (UPDATED FOR PWA & SECURITY) ---
-# ----------------------------------------------------------------------
-
-@app.route('/')
-def index():
-    return send_from_directory(app.static_folder, 'index.html')
-
-@app.route('/<path:filename>')
-def serve_static(filename):
-    # Security: Prevent direct access to backend/config files
-    if filename in ['app.py', '.env', 'requirements.txt']:
-        return "Access Denied", 403
-
-    # Handle PWA specific file types with correct MIME types (Crucial for PWA)
-    if filename == 'manifest.json':
-        return send_from_directory(app.static_folder, filename, mimetype='application/manifest+json')
-    elif filename == 'service-worker.js':
-        return send_from_directory(app.static_folder, filename, mimetype='application/javascript')
-    
-    # Default file serving (e.g., HTML, CSS, JS, images, icons)
-    return send_from_directory(app.static_folder, filename)
-
-if __name__ == '__main__':
-    print("-------------------------------------------------------")
-    print("  Akshu Cloud Gallery Backend Server Starting...")
-    print("-------------------------------------------------------")
-    # In a production environment, use gunicorn or waitress
-    app.run(host='0.0.0.0', port=5000)
-
-
-    # app.py - Akshu Cloud Gallery Backend (Snippets for NEW wallet/game features)
-
-# ... (Previous Imports)
-from datetime import datetime, timedelta
-# ... (Previous Initialization: app, Session, bcrypt, db, users_collection, photos_collection, contacts_collection)
-
-# New: Add 'wallets' and 'predictions' collections
-wallets_collection = db['wallets']
-predictions_collection = db['predictions']
-print("✅ New collections: Wallets and Predictions initialized.")
-
-# --- NEW UTILITY FUNCTION: Initialize Wallet on Login/Registration ---
-def initialize_wallet(user_id, initial_balance=1000):
-    """Checks if a user has a wallet. If not, creates one with an initial bonus."""
-    if wallets_collection.find_one({"user_id": user_id}) is None:
-        wallets_collection.insert_one({
-            "user_id": user_id,
-            "balance": initial_balance, # 1000 Free Akshu Tokens as bonus
-            "last_updated": datetime.now()
-        })
-        print(f"💰 Wallet created for user {user_id} with {initial_balance} tokens.")
-
-# --- Authentication routes updated to call initialize_wallet ---
-
-@app.route('/api/login', methods=['POST'])
-def login():
-    # ... (Login logic)
-    if user and bcrypt.check_password_hash(user['password'], password):
-        session['user_id'] = str(user['_id'])
-        session['username'] = user['username']
-        
-        # ⭐ Call new wallet initialization function
-        initialize_wallet(session['user_id']) 
-        
-        return jsonify({"success": True, "message": "Login successful.", "username": user['username']})
-    # ... (Else block remains same)
-
-# ----------------------------------------------------------------------
-# --- NEW 6. WALLET & BALANCE API ---
+# --- 5. WALLET & BALANCE API ---
 # ----------------------------------------------------------------------
 
 @app.route('/api/wallet/balance', methods=['GET'])
@@ -444,7 +379,7 @@ def get_wallet_balance():
     })
 
 # ----------------------------------------------------------------------
-# --- NEW 7. COLOR PREDICTION GAME API ---
+# --- 6. COLOR PREDICTION GAME API ---
 # ----------------------------------------------------------------------
 
 @app.route('/api/game/predict', methods=['POST'])
@@ -488,9 +423,37 @@ def place_prediction_bet():
 
     except Exception as e:
         print(f"❌ Prediction Error: {e}")
-        # Ideally, we would reverse the deduction here if an error occurred
+        # Revert deduction in a real scenario
+        # wallets_collection.update_one({"user_id": user_id}, {"$set": {"balance": wallet['balance']}})
         return jsonify({"success": False, "message": "Failed to place bet due to server error."}), 500
 
-# Note: The logic for generating game results and distributing winnings is a complex topic 
-# that would require a separate scheduled task or a result API endpoint. We skip it here 
-# for the initial setup.
+
+# ----------------------------------------------------------------------
+# --- 7. STATIC FILE ROUTES (PWA & SECURITY) ---
+# ----------------------------------------------------------------------
+
+@app.route('/')
+def index():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    # Security: Prevent direct access to backend/config files
+    if filename in ['app.py', '.env', 'requirements.txt']:
+        return "Access Denied", 403
+
+    # Handle PWA specific file types with correct MIME types
+    if filename == 'manifest.json':
+        return send_from_directory(app.static_folder, filename, mimetype='application/manifest+json')
+    elif filename == 'service-worker.js':
+        return send_from_directory(app.static_folder, filename, mimetype='application/javascript')
+    
+    # Default file serving (e.g., HTML, CSS, JS, images, icons)
+    return send_from_directory(app.static_folder, filename)
+
+if __name__ == '__main__':
+    print("-------------------------------------------------------")
+    print("  Akshu Cloud Gallery Backend Server Starting...")
+    print("-------------------------------------------------------")
+    # In a production environment, use gunicorn or waitress
+    app.run(host='0.0.0.0', port=5000)
