@@ -41,7 +41,7 @@ try:
     # NEW: Game Collections
     wallets_collection = db['wallets']
     predictions_collection = db['predictions']
-    game_rounds_collection = db['game_rounds'] # ⭐ New collection
+    game_rounds_collection = db['game_rounds'] 
     
     print("✅ MongoDB connection successful.")
 except Exception as e:
@@ -405,7 +405,6 @@ def process_round_winnings(round_id, winning_color):
     """Processes all pending bets for the given round and distributes winnings."""
     
     # NOTE: Assuming all 'pending' bets were for the round just completed.
-    # In production, bets would be linked by a temporary round_id field.
     pending_bets = predictions_collection.find({"status": "pending"}).limit(100) 
 
     total_winnings_distributed = 0
@@ -472,6 +471,7 @@ def run_game_round():
         "winning_color": winning_color
     })
 
+
 # ----------------------------------------------------------------------
 # --- 7. COLOR PREDICTION GAME API ---
 # ----------------------------------------------------------------------
@@ -521,7 +521,47 @@ def place_prediction_bet():
 
 
 # ----------------------------------------------------------------------
-# --- 8. STATIC FILE ROUTES (PWA & SECURITY) ---
+# --- 8. GAME STATUS API (NEW) ---
+# ----------------------------------------------------------------------
+
+@app.route('/api/game/status', methods=['GET'])
+@login_required
+def get_game_status():
+    """Fetches current round info, timer, and last results."""
+    
+    round_duration = 60 # 60 seconds per round cycle (can be adjusted)
+    
+    # 1. Get the latest round (for timer and current ID)
+    latest_round = game_rounds_collection.find_one(sort=[('round_id', -1)])
+    
+    # Calculate time remaining
+    if latest_round:
+        time_since_last_result = (datetime.now() - latest_round['result_time']).total_seconds()
+        time_remaining = max(0, int(round_duration - time_since_last_result))
+        current_round_id = latest_round['round_id'] + 1
+    else:
+        # If no rounds exist, start timer from max and round ID from 1
+        time_remaining = round_duration
+        current_round_id = 1
+
+
+    # 2. Get the last 10 processed results
+    past_results = game_rounds_collection.find({"is_processed": True}).sort('round_id', -1).limit(10)
+    results_list = [
+        {"round_id": r['round_id'], "color": r['winning_color']}
+        for r in past_results
+    ]
+    
+    return jsonify({
+        "success": True,
+        "current_round_id": current_round_id, 
+        "time_remaining": time_remaining,
+        "past_results": results_list
+    })
+
+
+# ----------------------------------------------------------------------
+# --- 9. STATIC FILE ROUTES (PWA & SECURITY) ---
 # ----------------------------------------------------------------------
 
 @app.route('/')
