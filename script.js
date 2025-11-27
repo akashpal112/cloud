@@ -5,8 +5,11 @@ const SERVER_URL = ''; // Empty means same domain (e.g., http://127.0.0.1:5000)
 const LOGIN_TOKEN = 'isLoggedIn'; 
 let galleryItems = []; // To hold the photo data for the current user
 let currentIndex = 0; // For lightbox navigation
+let stream = null; // Global variable to hold the video stream
 
-// --- 1. AUTHENTICATION HANDLERS ---
+// --- 1. AUTHENTICATION HANDLERS (UNCHANGED) ---
+
+// ... (handleRegister, handleLogin, logout functions remain the same)
 
 async function handleRegister(event) {
     event.preventDefault();
@@ -24,10 +27,15 @@ async function handleRegister(event) {
             body: JSON.stringify({ username, password })
         });
         const data = await response.json();
-        messageElement.style.color = data.success ? '#03DAC6' : '#FF6B6B';
-        messageElement.textContent = data.message;
+        
         if (data.success) {
+            // Updated: Redirect to login.html after successful registration
+            messageElement.style.color = '#03DAC6';
+            messageElement.textContent = data.message;
             setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+        } else {
+            messageElement.style.color = '#FF6B6B';
+            messageElement.textContent = data.message;
         }
     } catch (error) {
         console.error("Register Error:", error);
@@ -80,11 +88,14 @@ async function logout() {
     }
 }
 
-// --- 2. PHOTO UPLOAD HANDLERS (FIXED LOADING/DISPLAY ISSUE) ---
+// --- 2. PHOTO UPLOAD HANDLERS (UPDATED for metadata) ---
 
-async function uploadSingleFile(file) {
+async function uploadSingleFile(file, locationData = '') {
     const formData = new FormData();
     formData.append('file', file); 
+    if (locationData) {
+        formData.append('location', locationData);
+    }
     
     try {
         const response = await fetch(`${SERVER_URL}/api/upload`, {
@@ -127,7 +138,8 @@ async function handleMultipleUpload(event) {
             <br>Success: ${successfulUploads} | Failed: ${failedUploads}
         `;
         
-        const success = await uploadSingleFile(file); 
+        // Pass empty location for file uploads, assuming location is embedded in file exif or user skips live capture
+        const success = await uploadSingleFile(file, ''); 
         
         if (success) {
             successfulUploads++;
@@ -149,11 +161,12 @@ async function handleMultipleUpload(event) {
 }
 
 
-// --- 3. GALLERY MANAGEMENT ---
+// --- 3. GALLERY MANAGEMENT (UPDATED for metadata display) ---
 
 async function fetchGalleryImages() {
     const galleryDiv = document.getElementById('gallery');
     const imageCountSpan = document.getElementById('imageCount');
+    const contactCountFooterSpan = document.getElementById('contactCountFooter'); // Already in place
     
     // Show loading spinner ONLY in the gallery area
     if (galleryDiv) { 
@@ -174,6 +187,12 @@ async function fetchGalleryImages() {
         galleryItems = data.photos;
         
         if (imageCountSpan) imageCountSpan.textContent = galleryItems.length;
+        if (contactCountFooterSpan) {
+            // Update total count after fetching images
+            const currentContactCount = parseInt(document.getElementById('contactCount').textContent || 0);
+            contactCountFooterSpan.textContent = currentContactCount; // Re-sync or just keep existing count
+        }
+        
 
         if (galleryDiv) {
             galleryDiv.innerHTML = ''; 
@@ -190,8 +209,15 @@ async function fetchGalleryImages() {
                     card.className = 'gallery-card animate__animated animate__zoomIn';
                     card.setAttribute('data-index', index);
                     
+                    // Metadata for card hover
+                    const locationText = photo.location !== 'N/A' ? photo.location.split(',')[0] + '...' : 'Unknown Location';
+
                     card.innerHTML = `
                         <img src="${photo.url}" alt="User Photo" class="img-fluid" loading="lazy" onclick="openLightbox(${index})">
+                        <div class="photo-metadata">
+                             <p class="mb-0"><i class="fas fa-clock"></i> ${photo.uploaded_at}</p>
+                             <p class="mb-0"><i class="fas fa-map-marker-alt"></i> ${locationText}</p>
+                        </div>
                         <div class="card-overlay">
                             <span class="delete-btn" onclick="event.stopPropagation(); deletePhoto('${photo._id}', '${photo.public_id}')">
                                 <i class="fas fa-trash-alt"></i> Delete
@@ -227,7 +253,7 @@ async function deletePhoto(photoId, publicId) {
     try {
         const response = await fetch(`${SERVER_URL}/api/photos/${photoId}`, {
             method: 'DELETE',
-            headers: { 'Content-ID': publicId }
+            // headers: { 'Content-ID': publicId } // Not needed, public_id is only used server side for cloudinary deletion
         });
         
         const data = await response.json();
@@ -250,16 +276,23 @@ async function deletePhoto(photoId, publicId) {
 }
 
 
-// --- 4. LIGHTBOX HANDLERS ---
+// --- 4. LIGHTBOX HANDLERS (UPDATED for metadata display) ---
 
 function openLightbox(index) {
     if (galleryItems.length === 0) return;
     
     currentIndex = index;
+    const photo = galleryItems[currentIndex];
+
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxTime = document.getElementById('lightbox-time');
+    const lightboxLocation = document.getElementById('lightbox-location');
 
-    lightboxImg.src = galleryItems[currentIndex].url;
+    lightboxImg.src = photo.url;
+    lightboxTime.textContent = photo.uploaded_at;
+    lightboxLocation.textContent = photo.location !== 'N/A' ? `Lat: ${photo.location.split(',')[0]}, Lon: ${photo.location.split(',')[1]}` : 'Unknown Location';
+    
     lightbox.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -279,19 +312,27 @@ function navigateLightbox(direction) {
         currentIndex = 0;
     }
     
+    const photo = galleryItems[currentIndex];
+    
     const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxTime = document.getElementById('lightbox-time');
+    const lightboxLocation = document.getElementById('lightbox-location');
+    
     lightboxImg.style.opacity = 0;
     setTimeout(() => {
-        lightboxImg.src = galleryItems[currentIndex].url;
+        lightboxImg.src = photo.url;
+        lightboxTime.textContent = photo.uploaded_at;
+        lightboxLocation.textContent = photo.location !== 'N/A' ? `Lat: ${photo.location.split(',')[0]}, Lon: ${photo.location.split(',')[1]}` : 'Unknown Location';
         lightboxImg.style.opacity = 1;
     }, 200); 
 }
 
 
 // ----------------------------------------------------------------------
-// --- 5. PRIVATE CONTACTS HANDLERS (UPDATED SECTION) ---
+// --- 5. PRIVATE CONTACTS HANDLERS (UNCHANGED) ---
 // ----------------------------------------------------------------------
 
+// ... (fetchContacts, handleAddContact, deleteContact, handleVcfUpload functions remain the same)
 async function fetchContacts() {
     const contactsListDiv = document.getElementById('contactsList');
     const contactCountSpan = document.getElementById('contactCount');
@@ -350,9 +391,6 @@ async function fetchContacts() {
         if (contactsListDiv) contactsListDiv.innerHTML = `<p class="text-danger p-4">Error loading contacts: ${error.message}</p>`;
     }
 }
-// Attach VCF Upload Listener (NEW)
-const vcfUploadForm = document.getElementById('vcfUploadForm');
-if(vcfUploadForm) vcfUploadForm.addEventListener('submit', handleVcfUpload);
 
 async function handleAddContact(event) {
     event.preventDefault();
@@ -422,11 +460,6 @@ async function deleteContact(contactId) {
     }
 }
 
-
-/* ----------------------------------------------------------------------
-   script.js - VCF Upload Handler (NEW)
-----------------------------------------------------------------------*/
-
 async function handleVcfUpload(event) {
     event.preventDefault();
     const vcfFileInput = document.getElementById('vcfFileInput');
@@ -469,8 +502,145 @@ async function handleVcfUpload(event) {
     }
 }
 
+// ----------------------------------------------------------------------
+// --- 6. LIVE CAPTURE & GEOLOCATION HANDLERS (NEW) ---
+// ----------------------------------------------------------------------
 
-// --- 6. INITIALIZATION ---
+const videoElement = document.getElementById('videoElement');
+const canvasElement = document.getElementById('canvasElement');
+const captureButton = document.getElementById('captureButton');
+const uploadCaptureButton = document.getElementById('uploadCaptureButton');
+const retakeCaptureButton = document.getElementById('retakeCaptureButton');
+const liveCaptureMessage = document.getElementById('liveCaptureMessage');
+const locationLatLon = document.getElementById('locationLatLon');
+const captureTimestamp = document.getElementById('captureTimestamp');
+const capturedLocationInput = document.getElementById('capturedLocationInput');
+
+
+// Geolocation Fetcher
+function getGeolocation() {
+    liveCaptureMessage.textContent = 'Fetching location...';
+    liveCaptureMessage.style.color = 'yellow';
+    
+    if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(position => {
+            const lat = position.coords.latitude.toFixed(4);
+            const lon = position.coords.longitude.toFixed(4);
+            const locationString = `${lat},${lon}`;
+            
+            locationLatLon.textContent = `Lat: ${lat}, Lon: ${lon}`;
+            capturedLocationInput.value = locationString;
+            liveCaptureMessage.textContent = 'Location secured.';
+            liveCaptureMessage.style.color = '#03DAC6';
+            
+        }, error => {
+            console.error("Geolocation Error:", error);
+            locationLatLon.textContent = 'Location: Permission Denied/Unavailable';
+            capturedLocationInput.value = 'N/A';
+            liveCaptureMessage.textContent = 'Location access denied. Photo will be uploaded without location metadata.';
+            liveCaptureMessage.style.color = 'orange';
+        });
+    } else {
+        locationLatLon.textContent = 'Geolocation not supported.';
+        capturedLocationInput.value = 'N/A';
+        liveCaptureMessage.textContent = 'Geolocation not supported by your browser.';
+        liveCaptureMessage.style.color = 'orange';
+    }
+    
+    // Set immediate timestamp
+    captureTimestamp.textContent = new Date().toLocaleTimeString();
+}
+
+// Start Camera Stream
+async function startCamera() {
+    getGeolocation();
+    
+    // Reset UI state
+    videoElement.style.display = 'block';
+    canvasElement.style.display = 'none';
+    captureButton.style.display = 'block';
+    uploadCaptureButton.style.display = 'none';
+    retakeCaptureButton.style.display = 'none';
+    liveCaptureMessage.textContent = 'Initializing camera...';
+    liveCaptureMessage.style.color = 'yellow';
+
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        videoElement.srcObject = stream;
+        liveCaptureMessage.textContent = 'Camera ready. Smile!';
+        liveCaptureMessage.style.color = '#03DAC6';
+    } catch (err) {
+        console.error("Camera access denied:", err);
+        liveCaptureMessage.textContent = 'Camera access denied or unavailable.';
+        liveCaptureMessage.style.color = '#FF6B6B';
+        captureButton.style.display = 'none';
+    }
+}
+
+// Stop Camera Stream
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+}
+
+// Capture Photo
+function capturePhoto() {
+    if (!stream) return;
+    
+    const context = canvasElement.getContext('2d');
+    canvasElement.width = videoElement.videoWidth;
+    canvasElement.height = videoElement.videoHeight;
+    context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+
+    // Stop video stream and hide video element
+    stopCamera();
+    videoElement.style.display = 'none';
+    canvasElement.style.display = 'block';
+
+    // Update buttons
+    captureButton.style.display = 'none';
+    uploadCaptureButton.style.display = 'block';
+    retakeCaptureButton.style.display = 'block';
+    liveCaptureMessage.textContent = 'Photo captured!';
+    liveCaptureMessage.style.color = '#BB86FC';
+}
+
+// Upload Captured Photo
+async function uploadCapturedPhoto() {
+    liveCaptureMessage.textContent = 'Uploading captured photo...';
+    liveCaptureMessage.style.color = 'yellow';
+    
+    // Get image data from canvas
+    canvasElement.toBlob(async (blob) => {
+        const capturedFile = new File([blob], "captured_photo.jpeg", { type: "image/jpeg" });
+        const locationData = capturedLocationInput.value;
+        
+        // Use the general upload function
+        const success = await uploadSingleFile(capturedFile, locationData === 'N/A' ? '' : locationData);
+
+        if (success) {
+            liveCaptureMessage.textContent = 'Photo uploaded successfully!';
+            liveCaptureMessage.style.color = '#03DAC6';
+            // Hide modal and refresh gallery after a short delay
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('liveCaptureModal'));
+                if(modal) modal.hide();
+                fetchGalleryImages();
+            }, 1000);
+        } else {
+            liveCaptureMessage.textContent = 'Upload failed. Try again.';
+            liveCaptureMessage.style.color = '#FF6B6B';
+        }
+    }, 'image/jpeg', 0.9);
+}
+
+
+// --- 7. INITIALIZATION (UPDATED with modal events) ---
 
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -514,9 +684,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             const addContactForm = document.getElementById('addContactForm');
             if(addContactForm) addContactForm.addEventListener('submit', handleAddContact);
             
-            // Attach VCF Upload Listener (NEW)
+            // Attach VCF Upload Listener
             const vcfUploadForm = document.getElementById('vcfUploadForm');
             if(vcfUploadForm) vcfUploadForm.addEventListener('submit', handleVcfUpload);
+
+            // Attach Live Capture Listeners (NEW)
+            if(captureButton) captureButton.addEventListener('click', capturePhoto);
+            if(uploadCaptureButton) uploadCaptureButton.addEventListener('click', uploadCapturedPhoto);
+            if(retakeCaptureButton) retakeCaptureButton.addEventListener('click', startCamera);
+            
+            const liveCaptureModal = document.getElementById('liveCaptureModal');
+            if(liveCaptureModal) {
+                // Start camera when modal opens
+                liveCaptureModal.addEventListener('shown.bs.modal', startCamera);
+                // Stop camera when modal closes
+                liveCaptureModal.addEventListener('hidden.bs.modal', stopCamera);
+            }
             
         } else {
             if (loginPrompt) loginPrompt.style.display = "block";
@@ -526,73 +709,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
-// ... (The beginning of script.js remains the same)
-
-// --- 1. AUTHENTICATION HANDLERS ---
-
-async function handleRegister(event) {
-    event.preventDefault();
-    const username = document.getElementById('registerUsername').value;
-    const password = document.getElementById('registerPassword').value;
-    const messageElement = document.getElementById('registerMessage');
-    
-    messageElement.textContent = "Registering...";
-    messageElement.style.color = 'yellow'; 
-
-    try {
-        const response = await fetch(`${SERVER_URL}/api/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-            // **UPDATED: Redirect to thankyou.html with username**
-            const userFullName = document.getElementById('registerName').value || username;
-            window.location.href = `thankyou.html?name=${encodeURIComponent(userFullName)}`;
-        } else {
-            messageElement.style.color = '#FF6B6B';
-            messageElement.textContent = data.message;
-        }
-    } catch (error) {
-        console.error("Register Error:", error);
-        messageElement.textContent = 'Server Error. Please try again later.';
-        messageElement.style.color = '#FF6B6B';
-    }
-}
-
-async function handleLogin(event) {
-    event.preventDefault();
-    const username = document.getElementById('loginUsername').value; 
-    const password = document.getElementById('loginPassword').value;
-    const messageElement = document.getElementById('loginMessage');
-    
-    messageElement.textContent = "Logging in...";
-    messageElement.style.color = 'yellow'; 
-
-    try {
-        const response = await fetch(`${SERVER_URL}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-            localStorage.setItem(LOGIN_TOKEN, 'true'); 
-            localStorage.setItem('username', data.username);
-            // **CONFIRMED: Redirect to gallery.html after successful login**
-            window.location.href = 'gallery.html'; 
-        } else {
-            messageElement.style.color = '#FF6B6B';
-            messageElement.textContent = data.message;
-        }
-    } catch (error) {
-        console.error("Login Error:", error);
-        messageElement.textContent = 'Server Error. Please try again later.';
-        messageElement.style.color = '#FF6B6B';
-    }
-}
-
-// ... (The rest of script.js remains the same)

@@ -109,7 +109,7 @@ def logout():
     return jsonify({"success": True, "message": "Logged out successfully."})
 
 
-# --- 3. PHOTO MANAGEMENT ---
+# --- 3. PHOTO MANAGEMENT (UPDATED) ---
 
 @app.route('/api/upload', methods=['POST'])
 @login_required
@@ -122,6 +122,9 @@ def upload_photo():
     if file_to_upload.filename == '':
         return jsonify({"success": False, "message": "No selected file."}), 400
 
+    # Retrieve optional metadata from form data
+    location_data = request.form.get('location', '') # 'lat,lon'
+    
     try:
         # Uploading to a folder named after the username for isolation
         upload_result = cloudinary.uploader.upload(file_to_upload, folder=session['username'])
@@ -131,7 +134,8 @@ def upload_photo():
             "url": upload_result['secure_url'],
             "public_id": upload_result['public_id'],
             "filename": file_to_upload.filename,
-            "uploaded_at": datetime.now()
+            "uploaded_at": datetime.now(), # Server timestamp (reliable)
+            "location": location_data # New field for geolocation
         }
         photos_collection.insert_one(photo_data)
         
@@ -150,10 +154,15 @@ def get_photos():
     
     photos_list = []
     for photo in user_photos:
+        # Include new metadata fields
+        uploaded_at_str = photo.get('uploaded_at').strftime("%Y-%m-%d %H:%M:%S") if photo.get('uploaded_at') else 'N/A'
+        
         photos_list.append({
             "_id": str(photo.get('_id')),
             "url": photo.get('url'),
-            "public_id": photo.get('public_id')
+            "public_id": photo.get('public_id'),
+            "uploaded_at": uploaded_at_str, 
+            "location": photo.get('location', 'N/A')
         })
         
     return jsonify({"success": True, "photos": photos_list})
