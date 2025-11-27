@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Akshu Cloud Gallery - Premium Storage</title>
     <meta name="keywords" content="My Cloud Gallery, private photos, cloud storage, online gallery, photo collection, secure, fast">
-    <meta name="description" content="Akshu Cloud Gallery – secure, personal photos and memories. Experience blazing fast access and beautiful organization with a premium aesthetic.">
+    <meta name="description" content="Akshu Cloud Gallery – ultra-secure, personal photos, videos, and private contact management. Experience blazing fast access and beautiful organization.">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style.css">
     
     <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/svgs/solid/cloud-upload-alt.svg">
@@ -43,7 +42,7 @@
                             <a class="nav-link" href="#testimonials">Reviews</a>
                         </li>
                         <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
-                            <a class="btn btn-cta-primary w-100" href="login.html"><i class="fas fa-sign-in-alt me-1"></i> Login / Gallery</a>
+                            <a class="btn btn-cta-outline w-100" href="login.html"><i class="fas fa-sign-in-alt me-1"></i> Login / Gallery</a>
                         </li>
                     </ul>
                 </div>
@@ -101,16 +100,16 @@
                 </div>
                 <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="800">
                     <div class="feature-card">
-                        <i class="fas fa-lock mb-3 feature-icon-accent"></i>
-                        <h3>End-to-End Security</h3>
-                        <p>Protected by Bcrypt and server-side session management. Your data's integrity is guaranteed.</p>
+                        <i class="fas fa-layer-group mb-3 feature-icon-accent"></i>
+                        <h3>Organized Storage</h3>
+                        <p>Photos are auto-categorized by your username folder on Cloudinary for ultimate organization and separation.</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="1000">
                     <div class="feature-card">
-                        <i class="fas fa-download mb-3 feature-icon-accent"></i>
-                        <h3>Instant Access</h3>
-                        <p>Get to your files immediately after login. No lag, just instant access to your digital life.</p>
+                        <i class="fas fa-bolt mb-3 feature-icon-accent"></i>
+                        <h3>Blazing Fast Access</h3>
+                        <p>Photos, contacts, and all features load instantly thanks to optimized server and client-side logic.</p>
                     </div>
                 </div>
             </div>
@@ -157,9 +156,9 @@
                         <p class="section-subheading mb-4 text-start">Your privacy is not a feature, it's the foundation. We use a layered approach to security.</p>
                         <ul class="security-list">
                             <li><i class="fas fa-key me-3 text-accent"></i> **Bcrypt Hashing**: Passwords stored using the most secure hashing standard.</li>
-                            <li><i class="fas fa-database me-3 text-accent"></i> **MongoDB & Flask**: Modern, secure database and backend framework.</li>
-                            <li><i class="fas fa-lock me-3 text-accent"></i> **Data Isolation**: Each user's data is strictly linked to their session ID.</li>
-                            <li><i class="fas fa-file-shield me-3 text-accent"></i> **VCF Security**: Dedicated API for importing sensitive contact files securely.</li>
+                            <li><i class="fas fa-database me-3 text-accent"></i> **Data Isolation**: Each user's data is strictly linked to their session ID and MongoDB user_id.</li>
+                            <li><i class="fas fa-lock me-3 text-accent"></i> **Session Management**: Protected by Flask server-side session management.</li>
+                            <li><i class="fas fa-file-shield me-3 text-accent"></i> **Secure APIs**: All data retrieval requires active, validated login session.</li>
                         </ul>
                     </div>
                 </div>
@@ -185,9 +184,10 @@
                         </div>
                         <p class="text-muted-text mb-4">Everything you need to secure your memories and contacts.</p>
                         <ul class="list-unstyled text-start mx-auto" style="max-width: 300px;">
-                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> Unlimited Photo Storage</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> Unlimited Photo Storage (Cloudinary limit)</li>
                             <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> Private Contact Book</li>
                             <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> VCF Import/Delete Access</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> Multi-File Upload Support</li>
                             <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> All Security Features</li>
                             <li class="mb-2"><i class="fas fa-check-circle me-2 text-accent"></i> Fast CDN Delivery</li>
                         </ul>

@@ -526,3 +526,73 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
+// ... (The beginning of script.js remains the same)
+
+// --- 1. AUTHENTICATION HANDLERS ---
+
+async function handleRegister(event) {
+    event.preventDefault();
+    const username = document.getElementById('registerUsername').value;
+    const password = document.getElementById('registerPassword').value;
+    const messageElement = document.getElementById('registerMessage');
+    
+    messageElement.textContent = "Registering...";
+    messageElement.style.color = 'yellow'; 
+
+    try {
+        const response = await fetch(`${SERVER_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            // **UPDATED: Redirect to thankyou.html with username**
+            const userFullName = document.getElementById('registerName').value || username;
+            window.location.href = `thankyou.html?name=${encodeURIComponent(userFullName)}`;
+        } else {
+            messageElement.style.color = '#FF6B6B';
+            messageElement.textContent = data.message;
+        }
+    } catch (error) {
+        console.error("Register Error:", error);
+        messageElement.textContent = 'Server Error. Please try again later.';
+        messageElement.style.color = '#FF6B6B';
+    }
+}
+
+async function handleLogin(event) {
+    event.preventDefault();
+    const username = document.getElementById('loginUsername').value; 
+    const password = document.getElementById('loginPassword').value;
+    const messageElement = document.getElementById('loginMessage');
+    
+    messageElement.textContent = "Logging in...";
+    messageElement.style.color = 'yellow'; 
+
+    try {
+        const response = await fetch(`${SERVER_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            localStorage.setItem(LOGIN_TOKEN, 'true'); 
+            localStorage.setItem('username', data.username);
+            // **CONFIRMED: Redirect to gallery.html after successful login**
+            window.location.href = 'gallery.html'; 
+        } else {
+            messageElement.style.color = '#FF6B6B';
+            messageElement.textContent = data.message;
+        }
+    } catch (error) {
+        console.error("Login Error:", error);
+        messageElement.textContent = 'Server Error. Please try again later.';
+        messageElement.style.color = '#FF6B6B';
+    }
+}
+
+// ... (The rest of script.js remains the same)
