@@ -1,13 +1,13 @@
-# app.py - Akshu Cloud Gallery Backend (Fully Merged and Updated with Gaming Hub)
+# app.py - Akshu Cloud Gallery Backend (Fully Merged and Updated with Game Logic)
 
 from flask import Flask, request, jsonify, session, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_session import Session
-from datetime import datetime, timedelta # Added timedelta for potential use
+from datetime import datetime, timedelta 
 from functools import wraps 
 import os
 from dotenv import load_dotenv
-import random # Added for Game Result Logic preparation
+import random # Imported for Game Result Logic
 
 # Database and Cloudinary Imports
 from pymongo import MongoClient
@@ -41,6 +41,7 @@ try:
     # NEW: Game Collections
     wallets_collection = db['wallets']
     predictions_collection = db['predictions']
+    game_rounds_collection = db['game_rounds'] # ⭐ New collection
     
     print("✅ MongoDB connection successful.")
 except Exception as e:
@@ -115,7 +116,7 @@ def login():
         session['user_id'] = str(user['_id'])
         session['username'] = user['username']
         
-        # ⭐ Initialize wallet for new/existing user
+        # Initialize wallet for new/existing user
         initialize_wallet(session['user_id']) 
         
         return jsonify({"success": True, "message": "Login successful.", "username": user['username']})
@@ -130,7 +131,6 @@ def logout():
 
 
 # --- 3. PHOTO MANAGEMENT (CRUD) ---
-# (Routes for /api/upload, /api/photos, /api/photos/<photo_id> remain unchanged)
 
 @app.route('/api/upload', methods=['POST'])
 @login_required
@@ -209,7 +209,7 @@ def delete_photo(photo_id):
 
 # ----------------------------------------------------------------------
 # --- 4. PRIVATE CONTACTS MANAGEMENT (VCF & CRUD) ---
-# (Routes for /api/contacts, /api/import_vcf, /api/contacts/<contact_id> remain unchanged)
+# ----------------------------------------------------------------------
 
 @app.route('/api/contacts', methods=['POST'])
 @login_required
@@ -365,11 +365,9 @@ def delete_contact(contact_id):
 def get_wallet_balance():
     current_user_id = session['user_id']
     
-    # Ensure wallet exists (should be guaranteed by login, but safe guard)
     wallet = wallets_collection.find_one({"user_id": current_user_id})
     
     if not wallet:
-        # Should not happen if initialize_wallet is called correctly
         initialize_wallet(current_user_id) 
         wallet = wallets_collection.find_one({"user_id": current_user_id})
 
@@ -379,7 +377,103 @@ def get_wallet_balance():
     })
 
 # ----------------------------------------------------------------------
-# --- 6. COLOR PREDICTION GAME API ---
+# --- 6. GAME RESULT LOGIC (NEW) ---
+# ----------------------------------------------------------------------
+
+def generate_game_result():
+    """Generates the result of the next color prediction round."""
+    choices = ['red', 'green', 'violet']
+    # Probabilities: Red (45%), Green (45%), Violet (10%)
+    weights = [45, 45, 10]
+    
+    winning_color = random.choices(choices, weights=weights, k=1)[0]
+    
+    last_round = game_rounds_collection.find_one(sort=[('round_id', -1)])
+    next_round_id = (last_round['round_id'] + 1) if last_round else 1
+    
+    round_doc = {
+        "round_id": next_round_id,
+        "winning_color": winning_color,
+        "is_processed": False,
+        "result_time": datetime.now()
+    }
+    game_rounds_collection.insert_one(round_doc)
+    print(f"🎲 Round {next_round_id} result: {winning_color} recorded.")
+    return round_doc
+
+def process_round_winnings(round_id, winning_color):
+    """Processes all pending bets for the given round and distributes winnings."""
+    
+    # NOTE: Assuming all 'pending' bets were for the round just completed.
+    # In production, bets would be linked by a temporary round_id field.
+    pending_bets = predictions_collection.find({"status": "pending"}).limit(100) 
+
+    total_winnings_distributed = 0
+    
+    for bet in pending_bets:
+        user_id = bet['user_id']
+        amount = bet['amount']
+        prediction = bet['prediction']
+        payout = 0
+        
+        # Calculate Payout
+        if prediction == winning_color:
+            if winning_color == 'red' or winning_color == 'green':
+                payout = amount * 2  # 2X win (Bet amount + Win amount)
+            elif winning_color == 'violet':
+                payout = amount * 5  # 5X win
+        
+        if payout > 0:
+            # Credit the wallet
+            wallets_collection.update_one(
+                {"user_id": user_id},
+                {"$inc": {"balance": payout}}
+            )
+            
+            # Update prediction status
+            predictions_collection.update_one(
+                {"_id": bet['_id']},
+                {"$set": {"status": "won", "winnings": payout, "processed_round": round_id}}
+            )
+            total_winnings_distributed += payout
+            
+        else:
+            # Update prediction status (Lost)
+            predictions_collection.update_one(
+                {"_id": bet['_id']},
+                {"$set": {"status": "lost", "processed_round": round_id}}
+            )
+            
+    # Set the round as processed
+    game_rounds_collection.update_one(
+        {"round_id": round_id},
+        {"$set": {"is_processed": True, "total_payout": total_winnings_distributed}}
+    )
+    
+    print(f"💰 Round {round_id} processed. Winnings: {total_winnings_distributed} tokens.")
+
+
+@app.route('/api/game/run_round', methods=['POST'])
+@login_required 
+def run_game_round():
+    """A testing route to manually trigger result generation and processing."""
+    
+    # 1. Generate the next result
+    round_result = generate_game_result()
+    round_id = round_result['round_id']
+    winning_color = round_result['winning_color']
+    
+    # 2. Process the winnings for this new round
+    process_round_winnings(round_id, winning_color)
+    
+    return jsonify({
+        "success": True,
+        "message": f"Game Round {round_id} completed.",
+        "winning_color": winning_color
+    })
+
+# ----------------------------------------------------------------------
+# --- 7. COLOR PREDICTION GAME API ---
 # ----------------------------------------------------------------------
 
 @app.route('/api/game/predict', methods=['POST'])
@@ -410,7 +504,7 @@ def place_prediction_bet():
             "user_id": user_id,
             "prediction": prediction,
             "amount": amount,
-            "status": "pending", # Will be updated later by the result logic
+            "status": "pending",
             "placed_at": datetime.now()
         }
         predictions_collection.insert_one(prediction_doc)
@@ -423,13 +517,11 @@ def place_prediction_bet():
 
     except Exception as e:
         print(f"❌ Prediction Error: {e}")
-        # Revert deduction in a real scenario
-        # wallets_collection.update_one({"user_id": user_id}, {"$set": {"balance": wallet['balance']}})
         return jsonify({"success": False, "message": "Failed to place bet due to server error."}), 500
 
 
 # ----------------------------------------------------------------------
-# --- 7. STATIC FILE ROUTES (PWA & SECURITY) ---
+# --- 8. STATIC FILE ROUTES (PWA & SECURITY) ---
 # ----------------------------------------------------------------------
 
 @app.route('/')
@@ -442,18 +534,15 @@ def serve_static(filename):
     if filename in ['app.py', '.env', 'requirements.txt']:
         return "Access Denied", 403
 
-    # Handle PWA specific file types with correct MIME types
     if filename == 'manifest.json':
         return send_from_directory(app.static_folder, filename, mimetype='application/manifest+json')
     elif filename == 'service-worker.js':
         return send_from_directory(app.static_folder, filename, mimetype='application/javascript')
     
-    # Default file serving (e.g., HTML, CSS, JS, images, icons)
     return send_from_directory(app.static_folder, filename)
 
 if __name__ == '__main__':
     print("-------------------------------------------------------")
     print("  Akshu Cloud Gallery Backend Server Starting...")
     print("-------------------------------------------------------")
-    # In a production environment, use gunicorn or waitress
     app.run(host='0.0.0.0', port=5000)
