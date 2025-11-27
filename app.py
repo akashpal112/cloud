@@ -13,7 +13,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import cloudinary
 import cloudinary.uploader
-import vobject # <--- NEW: VCF parsing library
+import vobject 
 
 # Load environment variables from .env file
 load_dotenv()
@@ -82,6 +82,7 @@ def register():
         return jsonify({"success": False, "message": "Username already exists."})
     
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    # Note: We are only storing username and password for core login
     users_collection.insert_one({'username': username, 'password': hashed_password})
     
     return jsonify({"success": True, "message": "Registration successful! You can now log in."})
@@ -122,6 +123,7 @@ def upload_photo():
         return jsonify({"success": False, "message": "No selected file."}), 400
 
     try:
+        # Uploading to a folder named after the username for isolation
         upload_result = cloudinary.uploader.upload(file_to_upload, folder=session['username'])
         
         photo_data = {
@@ -143,6 +145,7 @@ def upload_photo():
 @login_required
 def get_photos():
     current_user_id = session['user_id']
+    # Security: Only retrieve photos linked to the current user_id
     user_photos = photos_collection.find({"user_id": current_user_id}).sort("uploaded_at", -1)
     
     photos_list = []
@@ -161,6 +164,7 @@ def delete_photo(photo_id):
     current_user_id = session['user_id']
     
     try:
+        # Security: Find photo linked to photo_id AND current_user_id
         photo_doc = photos_collection.find_one({"_id": ObjectId(photo_id), "user_id": current_user_id})
         
         if not photo_doc:
@@ -168,8 +172,10 @@ def delete_photo(photo_id):
         
         public_id = photo_doc['public_id']
         
+        # 1. Delete from Cloudinary
         cloudinary.uploader.destroy(public_id)
         
+        # 2. Delete from MongoDB
         photos_collection.delete_one({"_id": ObjectId(photo_id)})
         
         return jsonify({"success": True, "message": "Photo deleted successfully."})
@@ -180,7 +186,7 @@ def delete_photo(photo_id):
 
 
 # ----------------------------------------------------------------------
-# --- 4. NEW API ENDPOINTS: PRIVATE CONTACTS ---
+# --- 4. PRIVATE CONTACTS MANAGEMENT (VCF & CRUD) ---
 # ----------------------------------------------------------------------
 
 @app.route('/api/contacts', methods=['POST'])
@@ -209,7 +215,7 @@ def add_contact():
         print(f"❌ Error adding contact: {e}")
         return jsonify({"success": False, "message": "Failed to save contact."}), 500
         
-# --- NEW: VCF Contact Import Route ---
+# VCF Contact Import Route
 @app.route('/api/import_vcf', methods=['POST'])
 @login_required
 def import_vcf():
@@ -226,7 +232,6 @@ def import_vcf():
     if not vcf_file.filename.endswith('.vcf'):
         return jsonify({"success": False, "message": "Invalid file type. Please upload a .vcf file."}), 400
     
-    # Read the file content
     try:
         # Read the file content and decode it to a string for vobject parsing
         vcf_content = vcf_file.read().decode('utf-8') 
@@ -257,7 +262,6 @@ def import_vcf():
             if hasattr(vcard, 'tel_list'):
                 for tel in vcard.tel_list:
                     phone = tel.value
-                    # Check for common mobile/voice types
                     if 'CELL' in tel.params.get('TYPE', []) or 'VOICE' in tel.params.get('TYPE', []):
                         break 
             
@@ -313,7 +317,7 @@ def get_contacts():
                 "name": contact.get('name'),
                 "phone": contact.get('phone'),
                 "email": contact.get('email', 'N/A'),
-                "created_at": contact.get('created_at').strftime("%Y-%m-%d %H:%M:%S")
+                "created_at": contact.get('created_at').strftime("%Y-%m-%d %H:%M:%S") if contact.get('created_at') else 'N/A'
             })
             
         return jsonify({"success": True, "contacts": contacts_list})
@@ -328,7 +332,7 @@ def delete_contact(contact_id):
     current_user_id = session.get('user_id')
     
     try:
-        # Ensure the contact belongs to the user before deleting
+        # Security: Ensure the contact belongs to the user before deleting
         result = contacts_collection.delete_one({"_id": ObjectId(contact_id), "user_id": current_user_id})
         
         if result.deleted_count == 1:
@@ -340,7 +344,9 @@ def delete_contact(contact_id):
         print(f"❌ Error deleting contact {contact_id}: {e}")
         return jsonify({"success": False, "message": "Failed to delete contact."}), 500
 
-# --- 5. STATIC FILE ROUTES ---
+# ----------------------------------------------------------------------
+# --- 5. STATIC FILE ROUTES (UPDATED FOR PWA & SECURITY) ---
+# ----------------------------------------------------------------------
 
 @app.route('/')
 def index():
@@ -348,12 +354,22 @@ def index():
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    if filename in ['app.py', '.env']:
+    # Security: Prevent direct access to backend/config files
+    if filename in ['app.py', '.env', 'requirements.txt']:
         return "Access Denied", 403
+
+    # Handle PWA specific file types with correct MIME types (Crucial for PWA)
+    if filename == 'manifest.json':
+        return send_from_directory(app.static_folder, filename, mimetype='application/manifest+json')
+    elif filename == 'service-worker.js':
+        return send_from_directory(app.static_folder, filename, mimetype='application/javascript')
+    
+    # Default file serving (e.g., HTML, CSS, JS, images, icons)
     return send_from_directory(app.static_folder, filename)
 
 if __name__ == '__main__':
     print("-------------------------------------------------------")
     print("  Akshu Cloud Gallery Backend Server Starting...")
     print("-------------------------------------------------------")
+    # In a production environment, use gunicorn or waitress
     app.run(host='0.0.0.0', port=5000)
